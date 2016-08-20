@@ -13,10 +13,10 @@ class CentralZonotopalAlgebra(object):
         self.J = None # J(X) ideal generators
         self.P = None # P(X) homogeneous basis elements
         self.D = None # D(X) homogeneous basis elements
-    
+
     def __repr__(self):
         return "Zonotopal Algebra over the field " + str(self.F) + " with matrix " + str(self.X)
-    
+
     def _poly(self,v):
         n = self.Pi.ngens()
         vars = self.Pi.gens()
@@ -24,13 +24,13 @@ class CentralZonotopalAlgebra(object):
         for i in range(n):
             p += v[i]*vars[i]
         return p
-    
+
     def _polys(self,S,matr):
         p = self.Pi.one()
         for s in S:
             p *= self._poly(matr.column(s))
         return p
-    
+
     def __facet_hyperplanes(self):
         if self.hyperplanes == None:
             subsets = []
@@ -44,13 +44,13 @@ class CentralZonotopalAlgebra(object):
                 eta.append(space.basis()[0])
             self.hyperplanes = (eta, subsets) # zippable
         return self.hyperplanes
-    
+
     def _facet_hyperplanes(self):
         return self.__facet_hyperplanes()[1]
-    
+
     def _facet_hyperplane_normals(self):
         return self.__facet_hyperplanes()[0]
-    
+
     def I_ideal_gens(self):
         if self.I == None:
             gens = []
@@ -60,10 +60,10 @@ class CentralZonotopalAlgebra(object):
                 gens.append(self._poly(eta[i])**(self.M.size()-len(subsets[i])))
             self.I = gens
         return self.I
-    
+
     def I_ideal(self):
         return ideal(self.I_ideal_gens())
-    
+
     # not used currently for computation of zonotopal spaces
     def _short_long_sets(self):
         if self.short_long == None:
@@ -76,13 +76,13 @@ class CentralZonotopalAlgebra(object):
                     L.append(s)
             self.short_long = (S, L)
         return self.short_long
-    
+
     def short_subsets(self):
         return Sequence(self._short_long_sets()[0], immutable=True)
-    
+
     def long_subsets(self):
         return Sequence(self._short_long_sets()[1], immutable=True)
-    
+
     def _cocircuits(self):
         if self.cocircuits == None:
             # complements of hyperplanes, this construction is zippable with corresponding hyperplanes
@@ -93,7 +93,7 @@ class CentralZonotopalAlgebra(object):
                 cocircs.append(g.difference(h))
             self.cocircuits = cocircs
         return self.cocircuits
-    
+
     def J_ideal_gens(self):
         if self.J == None:
             gens = []
@@ -101,10 +101,10 @@ class CentralZonotopalAlgebra(object):
                 gens.append(self._polys(c,self.X))
             self.J = gens
         return self.J
-    
+
     def J_ideal(self):
         return ideal(self.J_ideal_gens())
-    
+
     def _big_ex(self,S):
         ex_poss = self.M.groundset().difference(S)
         def f(e):
@@ -112,7 +112,7 @@ class CentralZonotopalAlgebra(object):
             return not e in flat
         ex = filter(f, ex_poss)
         return ex
-    
+
     def _big_y(self,S):
         y_poss = self.M.groundset().difference(S)
         def f(e):
@@ -120,7 +120,7 @@ class CentralZonotopalAlgebra(object):
             return not e in flat
         y = filter(f, y_poss)
         return y
-    
+
     def P_basis(self):
         if self.P == None:
             P = []
@@ -130,7 +130,7 @@ class CentralZonotopalAlgebra(object):
             P.sort()
             self.P = P
         return self.P
-    
+
     def _poly_dual_basis(self, poly_basis):
         # compute a dual basis for an input *homogeneous* basis
         class _PolynomialVectorSpace(CombinatorialFreeModule):
@@ -156,7 +156,7 @@ class CentralZonotopalAlgebra(object):
             q = sum(coeff*p for coeff,p in zip(col, poly_basis))
             dual_poly_basis.append(q)
         return dual_poly_basis
-    
+
     def _D_basis_project(self,dual_basis):
         D = []
         # associate hyperplanes with cocircuits
@@ -175,7 +175,7 @@ class CentralZonotopalAlgebra(object):
                 q -= coeff1/coeff2 * i
             D.append(q)
         return D
-    
+
     def D_basis(self):
         # modify P(X) basis (acting as a P(X)* basis) to be in kernel of J(X)
         if self.D == None:
@@ -183,7 +183,7 @@ class CentralZonotopalAlgebra(object):
             P_basis_internal_dual = self._poly_dual_basis(P_basis)
             self.D = self._D_basis_project(P_basis_internal_dual)
         return self.D
-    
+
     @staticmethod
     def poly_deriv(p,q):
         g = p.parent().gens();
@@ -194,7 +194,7 @@ class CentralZonotopalAlgebra(object):
                 diff_list.extend([v]*e);
             s += coeff*q.derivative(diff_list);
         return s
-    
+
     @staticmethod
     def diff_bilinear_form(p,q):
         n_vars = len(p.parent().gens())
