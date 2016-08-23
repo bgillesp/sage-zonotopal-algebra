@@ -1,6 +1,7 @@
 
 from sage.structure.parent import Parent
 from sage.structure.element import Element
+from sage.structure.parent import Set_generic
 from sage.categories.infinite_enumerated_sets import InfiniteEnumeratedSets
 from sage.structure.unique_representation import UniqueRepresentation
 from sage.rings.infinity import Infinity
@@ -10,7 +11,7 @@ from sage.categories.enumerated_sets import EnumeratedSets
 
 
 
-class Monomials(UniqueRepresentation, Parent):
+class Monomials(Set_generic, UniqueRepresentation):
     def __init__(self, P, degs=(0, +Infinity)):
         r"""
         The set of monomials of a polynomial ring.
@@ -23,15 +24,14 @@ class Monomials(UniqueRepresentation, Parent):
         self._min_deg = degs[0]
         self._max_deg = degs[1]
         if self._max_deg < +Infinity:
-            Parent.__init__(self, category = EnumeratedSets.Finite())
+            super(Monomials, self).__init__(facade = self._poly_ring, category = EnumeratedSets.Finite())
         else:
-            Parent.__init__(self, category = EnumeratedSets.Infinite())
+            super(Monomials, self).__init__(facade = self._poly_ring, category = EnumeratedSets.Infinite())
 
-        self._populate_coercion_lists_( embedding=MonomialsMorphism(self, self._poly_ring) )
+        #self._populate_coercion_lists_( embedding=MonomialsMorphism(self, self._poly_ring) )
 
     def _deg_string(self):
         m, M = self._min_deg, self._max_deg - 1
-
         if m > 0 and M < +Infinity:
             return " with degree at least %d and at most %d" % (m, M)
         elif m > 0:
@@ -43,8 +43,7 @@ class Monomials(UniqueRepresentation, Parent):
 
     def _repr_(self):
         m, M = self._min_deg, self._max_deg - 1
-        return "The enumerated set of monomials%s in %s" % \
-            (self._deg_string(), P)
+        return "Set of all monomials%s in %s" % (self._deg_string(), P)
 
         # if m > 0 and M < +Infinity:
         #     return "%s with degree at least %d and at most %d" \
@@ -97,15 +96,15 @@ class Monomials(UniqueRepresentation, Parent):
             k1, k2 = self._min_deg, self._max_deg
             return binomial(n + k2 - 1, n) - binomial(n + k1 - 1, n)
 
-    # def _element_constructor_(self, elt):
-    #     r"""
-    #     Construct a monomial in the appropriate polynomial ring, if it lies
-    #     in the correct range of degrees.
-    #     """
-    #     if elt in self:
-    #         return self._poly_ring(elt)
-    #     else:
-    #         raise ValueError("Value %s is not a monomial%s" % (elt, self._deg_string()))
+    def _element_constructor_(self, elt):
+        r"""
+        Construct a monomial in the appropriate polynomial ring, if it lies
+        in the correct range of degrees.
+        """
+        if elt in self:
+            return self._poly_ring(elt)
+        else:
+            raise ValueError("Value %s is not a monomial%s" % (elt, self._deg_string()))
 
     def __getitem__(self, index):
         if type(index) is tuple:
@@ -114,28 +113,6 @@ class Monomials(UniqueRepresentation, Parent):
         else:
             return Parent.__getitem__(self, index)
 
-    Element = MonomialElement
-
-class MonomialElement(RingElement):
-    def __init__(self, parent, p):
-        Element.__init__(self, parent)
-        if p in parent:
-            self._p = parent._poly_ring(p)
-        else:
-            raise ValueError("Value %s is not a monomial%s" % (p, parent._deg_string()))
-
-    def _repr_(self):
-        return self._p._repr_()
-
-    def _value(self):
-        return self._p
-
-class MonomialsMorphism(Morphism):
-    def __init__(self, monom_set, poly_ring):
-        Morphism.__init__(self, monom_set, poly_ring)
-
-    def _call_(self, x):
-        return self.domain()._poly_ring(x._value())
 
 class PolynomialModule(CombinatorialFreeModule, UniqueRepresentation, Parent):
     def __init__(self, P, basis=None):
@@ -144,59 +121,144 @@ class PolynomialModule(CombinatorialFreeModule, UniqueRepresentation, Parent):
         are linearly independent
         """
         self._poly_ring = P
-        self._basis = basis
-        if not basis:
-            basis = Monomials(P)
-            self._dimn = Infinity
-            self._uses_brackets = True
-            self._name = 'Module of polynomials in %s with monomial basis' % P
-        else:
-            self._dimn = Set(self._basis).cardinality()
-            self._uses_brackets = True
-            if self._dimn == Infinity():
-                self._name = 'Module of polynomials in %s with infinite basis' % P
-            else:
-                # TODO check that the given basis is linearly independent
-                self._name = 'Module of polynomials in %s with basis of size %d' % (P, self._dimn)
 
-        CombinatorialFreeModule.__init__(self, R=self._poly_ring.base_ring(),\
-            basis_keys=self._basis)
+        if not basis or basis is Monomials(P):
+            self._basis = Monomials(P)
+            self._dimn = Infinity
+            self._name = 'Module generated by all monomials in %s' % self._poly_ring
+            self._converter = self._AllPolynomialsConverter(self._poly_ring, self)
+        elif Set(basis).cardinality() == Infinity:
+            self._basis = basis
+            self._dimn = Infinity
+            self._name = 'Module generated by infinite basis of polynomials in %s' % self._poly_ring
+            self._converter = self._InfiniteBasisConverter(self._poly_ring, self, self._basis)
+        else:
+            # cast basis to a list here because lazy loading doesn't play nice
+            # with some of methods for CombinatorialFreeModule, especially gens()
+            self._basis = list(basis)
+            self._dimn = len(self._basis)
+            self._name = 'Module generated by basis of %d polynomials in %s' % (self._dimn, self._poly_ring)
+            self._converter = self._FiniteBasisConverter(self._poly_ring, self, self._basis)
+
+        super(PolynomialModule, self).__init__(R=self._poly_ring.base_ring(), basis_keys=self._basis)
 
         # Set up formatting
-        bracket = ['(', ')'] if self._uses_brackets else False
-        self.print_options(prefix="m", bracket=bracket)
+        bracket = ['(', ')']
+        self.print_options(prefix="", bracket=bracket)
 
-class FiniteDegreePolynomialModule(CombinatorialFreeModule, UniqueRepresentation, Parent):
+    class _AllPolynomialsConverter:
+        def __init__(self, P, comb_mod):
+            self._poly_ring = P
+            self._module = comb_mod
+
+        def convert_polynomial(self, p):
+            p = self._poly_ring(p)
+            monoms = [v[1]*self._module.monomial( self._poly_ring.monomial(*v[0]) ) \
+                for v in p.dict().items()]
+            module_p = sum(monoms, self._module.zero())
+            return module_p
+
+    class _FiniteBasisConverter:
+        def __init__(self, P, comb_mod, basis):
+            self._poly_ring = P
+            self._module = comb_mod
+            self._basis = basis
+
+            max_deg = max([self._poly_ring(b).degree() for b in self._basis])
+            self._monomial_module = FiniteMonomialModule(P=self._poly_ring, max_deg=max_deg)
+            # TODO check that the given basis is finite and linearly independent
+            self._basis_mat = \
+                Matrix([self._monomial_module(b).to_vector() for b in self._basis]).transpose()
+
+        def convert_polynomial(self, p):
+            p = self._poly_ring(p)
+            try:
+                p_vect = self._monomial_module(p).to_vector()
+                decomp = self._basis_mat.solve_right(p_vect)
+            except ValueError:
+                raise ValueError("Value %s is not spanned by the basis polynomials" % p)
+            polys = [v[1]*self._module.monomial( v[0] ) for v in zip(self._basis, decomp)]
+            module_p = sum(polys, self._module.zero())
+            return module_p
+
+    class _InfiniteBasisConverter:
+        def __init__(self, P, comb_mod, basis):
+            self._poly_ring = P
+            self._module = comb_mod
+            self._basis = basis
+            # TODO implement some sort of caching for intermediate objects for conversion
+
+        def convert_polynomial(self, p):
+            # TODO check if polynomial is contained in span of basis in general
+            # for now assume that infinite basis is in increasing order of degree,
+            # and collect basis elements until the degree exceeds that of input poly
+            # Note: This is not necessarily a good heuristic without further processing
+            # of the basis beforehand; always works for homogeneous polynomials though
+            # TODO for now, what characteristics of the basis guarantee correctness here?
+            p = self._poly_ring(p)
+            deg = p.degree()
+            fin_basis = []
+            it = iter(self._basis)
+            b = it.next()
+            while b.degree() <= deg:
+                fin_basis.append(b)
+                b = it.next()
+
+            C = PolynomialModule._FiniteBasisConverter(self._poly_ring, self._module, fin_basis)
+            return C.convert_polynomial(p)
+
+    def _element_constructor_(self, elt):
+        return self._converter.convert_polynomial(elt)
+
+    def convert_polynomial(self, p):
+        if not p in self._poly_ring:
+            raise ValueError("Value %s is not a polynomial in %s" % (p, self._poly_ring))
+        p = self._poly_ring(p)
+        return self._converter.convert_polynomial(p)
+
+# TODO add support for partial sets of monomials, perhaps rephrase this as a converter
+# class, or something less atomic
+class FiniteMonomialModule(CombinatorialFreeModule, UniqueRepresentation, Parent):
     def __init__(self, P, max_deg=0):
         self._poly_ring = P
         self._max_deg = max_deg
-        self._basis = Monomials(self._poly_ring, (0, self._max_deg + 1))
-        self._name = 'Module of polynomials of degree at most %d in %s with monomial basis' \
+        # use a list here because lazy loading doesn't play nice with some of
+        # methods for CombinatorialFreeModule, especially gens()
+        self._basis = list(Monomials(self._poly_ring, (0, self._max_deg + 1)))
+        self._name = 'Module generated by basis of monomials of degree at most %d in %s' \
             % (self._max_deg, self._poly_ring)
-        self.print_options(prefix="m", bracket=False)
 
         CombinatorialFreeModule.__init__(self, self._poly_ring.base_ring(), self._basis)
 
-    def __call__(self, o):
-        return self._element_constructor_(o)
+        self.print_options(prefix="", bracket=['(', ')'])
 
-    def _convert_polynomial_(self, p):
-        poly_items = [(poly_vectors(exponent), coeff) for exponent, coeff in p.dict().items()]
+    # def __call__(self, o):
+    #     return self._element_constructor_(o)
+
+    # TODO what the heck is self.basis() returning??
+
+    def convert_polynomial(self, p):
+        p = self._poly_ring(p)
+        if not p in self._poly_ring or p.degree() > self._max_deg:
+            raise ValueError("Value %s is not a polynomial of degree at most %d in %s" \
+                % (p, self._max_deg, self._poly_ring))
+
+        p = self._poly_ring(p)
+
+        monoms = [v[1]*self.monomial( self._poly_ring.monomial(*v[0]) ) \
+            for v in p.dict().items()]
+        module_p = sum(monoms, self.zero())
+        return module_p
 
     def _element_constructor_(self, elt):
-        if not elt in self._poly_ring or elt.degree() > self._max_deg:
-            raise ValueError("Value %s is not a polynomial of degree at most %d in %s" \
-                % (elt, self._max_deg, self._poly_ring))
-        else:
-            b = self.basis()
-            poly_items = [(poly_vectors(exponent), coeff) for exponent, coeff in p.dict().items()]
+        # convert_polynomial method checks validity of element
+        return self.convert_polynomial(elt)
 
-
-class OldPolynomialModule(CombinatorialFreeModule):
-    def __init__(self, P, k):
-        self._name = 'Module of degree at most %d polynomials' % k
-        CombinatorialFreeModule.__init__(self, P.base_ring(), Monomials(P, (0,k+1)))
-        self.print_options(prefix="m", bracket=["(",")"])
+# class OldPolynomialModule(CombinatorialFreeModule):
+#     def __init__(self, P, k):
+#         self._name = 'Module of degree at most %d polynomials' % k
+#         CombinatorialFreeModule.__init__(self, P.base_ring(), Monomials(P, (0,k+1)))
+#         self.print_options(prefix="m", bracket=["(",")"])
 
 #
 
