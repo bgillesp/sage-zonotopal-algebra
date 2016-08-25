@@ -1,3 +1,7 @@
+from polynomial_vector_space import PolynomialModule
+from polynomial_vector_space import Monomials
+from zonotopal_algebra import PolyUtils
+
 class CentralZonotopalAlgebra(object):
     def __init__(self,X,varNames="x"):
         self.F = X.base_ring()
@@ -15,7 +19,7 @@ class CentralZonotopalAlgebra(object):
         self.D = None # D(X) homogeneous basis elements
 
     def __repr__(self):
-        return "Zonotopal Algebra over the field " + str(self.F) + " with matrix " + str(self.X)
+        return "Zonotopal Algebra over the field " + str(self.F) + " with matrix\n" + str(self.X)
 
     def _poly(self,v):
         n = self.Pi.ngens()
@@ -121,41 +125,43 @@ class CentralZonotopalAlgebra(object):
         y = filter(f, y_poss)
         return y
 
+    @cached_method
     def P_basis(self):
-        if self.P == None:
-            P = []
-            for b in self.M.bases():
-                elts = self._big_ex(b)
-                P.append(self._polys(elts,self.X))
-            P.sort()
-            self.P = P
-        return self.P
+        P = []
+        for b in self.M.bases():
+            elts = self._big_ex(b)
+            P.append(self._polys(elts,self.X))
+        P.sort()
+        return P
 
     def _poly_dual_basis(self, poly_basis):
-        # compute a dual basis for an input *homogeneous* basis
+        # compute a dual basis for an input *homogeneous* [edit: monomial?] basis
         class _PolynomialVectorSpace(CombinatorialFreeModule):
             def __init__(self, R, n, k):
                 self._name = 'Module of degree at most %d polynomials in %d variables' % (n,k)
                 CombinatorialFreeModule.__init__(self, R, IntegerListsLex(max_sum=n, length=k))
                 self.print_options(prefix='x', bracket=['^', ''], latex_bracket=['^{', '}'])
         deg = max([p.degree() for p in poly_basis])
-        poly_vectors = _PolynomialVectorSpace(self.F, deg, self.X.nrows())
-        converted_basis = []
-        for p in poly_basis:
-            poly_items = [(poly_vectors(exponent), coeff) for exponent, coeff in p.dict().items()]
-            v = poly_vectors.linear_combination(poly_items)
-            converted_basis.append(v)
+        poly_mod = PolynomialModule( self.Pi, basis=Monomials(self.Pi, (0, deg+1)) )
+        # converted_basis = [poly_mod(p) for p in poly_basis]
         # compute dual basis
-        bilinear_form_coeffs = \
-            [prod(map(factorial, b.monomial_coefficients().keys()[0])) for b in poly_vectors.basis()]
-        A = Matrix([v.to_vector() for v in converted_basis])
-        D = Matrix.diagonal(bilinear_form_coeffs)
+        # print [b.monomial_coefficients().keys()[0] for b in polys_mod.basis()]
+        # return None
+        bilinear_form_coeffs = []
+        for b in poly_mod.basis().keys():
+            # each b is a monomial in self.Pi
+            b = self.Pi(b)
+            bilinear_form_coeffs.append( prod( map(factorial, b.degrees()) ) )
+        # bilinear_form_coeffs = \
+        #     [prod(map(factorial, b.monomial_coefficients().keys()[0])) for b in polys_mod.basis().keys()]
+        A = Matrix([poly_mod(p).to_vector() for p in poly_basis])
+        D = Matrix.diagonal(bilinear_form_coeffs, sparse=False)
         B = (A*D*A.transpose()).inverse()
-        dual_poly_basis = []
+        dual_basis = []
         for col in B.columns():
             q = sum(coeff*p for coeff,p in zip(col, poly_basis))
-            dual_poly_basis.append(q)
-        return dual_poly_basis
+            dual_basis.append(q)
+        return dual_basis
 
     def _D_basis_project(self,dual_basis):
         D = []
@@ -170,36 +176,18 @@ class CentralZonotopalAlgebra(object):
         for p in dual_basis:
             q = p
             for (i,j) in polys:
-                coeff1 = CentralZonotopalAlgebra.diff_bilinear_form(j,p)
-                coeff2 = CentralZonotopalAlgebra.diff_bilinear_form(j,i)
+                coeff1 = PolyUtils.diff_bilinear_form(j,p)
+                coeff2 = PolyUtils.diff_bilinear_form(j,i)
                 q -= coeff1/coeff2 * i
             D.append(q)
         return D
 
+    @cached_method
     def D_basis(self):
         # modify P(X) basis (acting as a P(X)* basis) to be in kernel of J(X)
-        if self.D == None:
-            P_basis = self.P_basis()
-            P_basis_internal_dual = self._poly_dual_basis(P_basis)
-            self.D = self._D_basis_project(P_basis_internal_dual)
-        return self.D
-
-    @staticmethod
-    def poly_deriv(p,q):
-        g = p.parent().gens();
-        s = 0;
-        for e_tup, coeff in p.dict().iteritems():
-            diff_list = [];
-            for v,e in zip(g,e_tup):
-                diff_list.extend([v]*e);
-            s += coeff*q.derivative(diff_list);
-        return s
-
-    @staticmethod
-    def diff_bilinear_form(p,q):
-        n_vars = len(p.parent().gens())
-        zero = [0]*n_vars
-        return (poly_deriv(p,q))(zero)
+        P_basis = self.P_basis()
+        P_basis_internal_dual = self._poly_dual_basis(P_basis)
+        return self._D_basis_project(P_basis_internal_dual)
 
 def zon_spaces(Z):
     print "Generating I..."
