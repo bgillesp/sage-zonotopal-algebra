@@ -1,22 +1,31 @@
+from central_zonotopal_algebra import CentralZonotopalAlgebra
+from sage.repl.rich_output.pretty_print import pretty_print
+
 class ZonotopalAlgebra:
     def __init__(self,X,variant="central",data={}):
         self.variant = variant
         self.data = data
         self.obj = None
-        if type=="central":
+        if variant=="central":
             varNames = 'x'; # TODO default variable
             if 'varNames' in data:
                 varNames = data['varNames']
             self.obj = CentralZonotopalAlgebra(X, varNames)
         # TODO include additional types of zonotopal algebras
         else:
-            raise ValueException("uncrecognized zonotopal algebra type: %s" % type)
+            raise ValueError("uncrecognized zonotopal algebra type: %s" % type)
 
     def I_ideal_gens(self):
         return self.obj.I_ideal_gens()
 
+    def I_ideal(self):
+        return self.obj.I_ideal()
+
     def J_ideal_gens(self):
         return self.obj.I_ideal_gens()
+
+    def J_ideal(self):
+        return self.obj.J_ideal()
 
     def D_basis(self):
         return self.obj.D_basis()
@@ -24,20 +33,51 @@ class ZonotopalAlgebra:
     def P_basis(self):
         return self.obj.P_basis()
 
-class PolyUtils:
-    @staticmethod
-    def poly_deriv(p,q):
-        g = p.parent().gens();
-        s = 0;
-        for e_tup, coeff in p.dict().iteritems():
-            diff_list = [];
-            for v,e in zip(g,e_tup):
-                diff_list.extend([v]*e);
-            s += coeff*q.derivative(diff_list);
-        return s
 
-    @staticmethod
-    def diff_bilinear_form(p,q):
-        n_vars = len(p.parent().gens())
-        zero = [0]*n_vars
-        return (PolyUtils.poly_deriv(p,q))(zero)
+def zon_spaces(Z):
+    print "Generating I..."
+    #I = Sequence(Z.I_ideal().gens(),universe=Z.Pi)
+    I = Z.I_ideal_gens()
+    I.sort()
+    print "Generating J..."
+    #J = Sequence(Z.J_ideal().groebner_basis(),universe=Z.Pi)
+    J = Z.J_ideal_gens()
+    J.sort()
+    print "Generating P..."
+    P = Z.P_basis()
+    P.sort()
+    print "Generating D..."
+    D = Z.D_basis()
+    D.sort()
+    return (I,J,P,D)
+
+def print_zon_info(tup):
+    (I,J,P,D) = tup
+    print "I(X) ="
+    pretty_print(I)
+    print ""
+    print "J(X) ="
+    pretty_print(J)
+    print ""
+    print "P(X) ="
+    pretty_print(P)
+    print ""
+    print "D(X) ="
+    pretty_print(D)
+
+def zon_info(X):
+    rws = X.nrows()
+    varstr = "xyzabc"
+    if rws <= len(varstr):
+        varstr = varstr[:rws]
+    else:
+        varstr = varstr[0]
+    # TODO make this more general
+    Z = CentralZonotopalAlgebra(X,varstr)
+    tup = zon_spaces(Z)
+    # print out central zonotopal spaces
+    print "X = "
+    pretty_print(Z.X)
+    print ""
+    print_zon_info(tup)
+    return tup
