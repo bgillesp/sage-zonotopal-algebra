@@ -1,6 +1,8 @@
 from central_zonotopal_algebra import CentralZonotopalAlgebra
+from internal_zonotopal_algebra import InternalZonotopalAlgebra
 from sage.repl.rich_output.pretty_print import pretty_print
 
+# TODO could reformulate this as a factory method rather than a shim
 class ZonotopalAlgebra:
     def __init__(self,X,variant="central",data={}):
         self.variant = variant
@@ -11,6 +13,11 @@ class ZonotopalAlgebra:
             if 'varNames' in data:
                 varNames = data['varNames']
             self.obj = CentralZonotopalAlgebra(X, varNames)
+        elif variant=="internal":
+            varNames = 'x';
+            if 'varNames' in data:
+                varNames = data['varNames']
+            self.obj = InternalZonotopalAlgebra(X, varNames)
         # TODO include additional types of zonotopal algebras
         else:
             raise ValueError("uncrecognized zonotopal algebra type: %s" % type)
@@ -32,7 +39,6 @@ class ZonotopalAlgebra:
 
     def P_basis(self):
         return self.obj.P_basis()
-
 
 def zon_spaces(Z):
     print "Generating I..."
@@ -77,7 +83,7 @@ def zon_info(X):
     tup = zon_spaces(Z)
     # print out central zonotopal spaces
     print "X = "
-    pretty_print(Z.X)
+    pretty_print(Z.matrix())
     print ""
     print_zon_info(tup)
     return tup
