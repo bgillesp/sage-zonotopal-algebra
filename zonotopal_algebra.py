@@ -1,44 +1,40 @@
 from central_zonotopal_algebra import CentralZonotopalAlgebra
 from internal_zonotopal_algebra import InternalZonotopalAlgebra
+from external_zonotopal_algebra import ExternalZonotopalAlgebra
 from sage.repl.rich_output.pretty_print import pretty_print
 
 # TODO could reformulate this as a factory method rather than a shim
-class ZonotopalAlgebra:
-    def __init__(self,X,variant="central",data={}):
-        self.variant = variant
-        self.data = data
-        self.obj = None
-        if variant=="central":
-            varNames = 'x'; # TODO default variable
-            if 'varNames' in data:
-                varNames = data['varNames']
-            self.obj = CentralZonotopalAlgebra(X, varNames)
-        elif variant=="internal":
-            varNames = 'x';
-            if 'varNames' in data:
-                varNames = data['varNames']
-            self.obj = InternalZonotopalAlgebra(X, varNames)
-        # TODO include additional types of zonotopal algebras
-        else:
-            raise ValueError("uncrecognized zonotopal algebra type: %s" % type)
+def ZonotopalAlgebra(X,variant="central",data={}):
+    if variant == "central":
+        return CentralZonotopalAlgebra(X, **data)
+    elif variant == "internal":
+        return InternalZonotopalAlgebra(X, **data)
+    elif variant == "external":
+        return ExternalZonotopalAlgebra(X, **data)
+    # TODO include additional types of zonotopal algebras as possible
+    else:
+        raise ValueError("uncrecognized zonotopal algebra type: %s" % variant)
 
-    def I_ideal_gens(self):
-        return self.obj.I_ideal_gens()
-
-    def I_ideal(self):
-        return self.obj.I_ideal()
-
-    def J_ideal_gens(self):
-        return self.obj.I_ideal_gens()
-
-    def J_ideal(self):
-        return self.obj.J_ideal()
-
-    def D_basis(self):
-        return self.obj.D_basis()
-
-    def P_basis(self):
-        return self.obj.P_basis()
+    # def __repr__(self):
+    #     return self.obj.__repr__()
+    #
+    # def I_ideal_gens(self):
+    #     return self.obj.I_ideal_gens()
+    #
+    # def I_ideal(self):
+    #     return self.obj.I_ideal()
+    #
+    # def J_ideal_gens(self):
+    #     return self.obj.J_ideal_gens()
+    #
+    # def J_ideal(self):
+    #     return self.obj.J_ideal()
+    #
+    # def D_basis(self):
+    #     return self.obj.D_basis()
+    #
+    # def P_basis(self):
+    #     return self.obj.P_basis()
 
 def zon_spaces(Z):
     print "Generating I..."
@@ -71,15 +67,17 @@ def print_zon_info(tup):
     print "D(X) ="
     pretty_print(D)
 
-def zon_info(X):
-    rws = X.nrows()
-    varstr = "xyzabc"
-    if rws <= len(varstr):
-        varstr = varstr[:rws]
-    else:
-        varstr = varstr[0]
-    # TODO make this more general
-    Z = CentralZonotopalAlgebra(X,varstr)
+def zon_info(X, variant="central", data={}):
+    data = data.copy()
+    if not varNames in data:
+        rws = X.nrows()
+        varstr = "xyzabc"
+        if rws <= len(varstr):
+            varstr = varstr[:rws]
+        else:
+            varstr = varstr[0]
+        data.varNames = varstr
+    Z = ZonotopalAlgebra(X, variant, data)
     tup = zon_spaces(Z)
     # print out central zonotopal spaces
     print "X = "

@@ -1,8 +1,8 @@
 from poly_utils import PolyUtils
 # from sage.misc.cachefunc import cached_method
 from sage.matroids.constructor import Matroid
-from sage.misc.misc import powerset
 from sage.modules.free_module import VectorSpace
+from sage.rings.ideal import Ideal
 from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
 from sage.misc.misc_c import prod
 
@@ -47,26 +47,14 @@ class AbstractZonotopalAlgebra:
         for h in self._facet_hyperplanes():
             yield g.difference(h)
 
-    # not currently used for computation of zonotopal spaces
-    # TODO is this abstract or specific to central case?
-    def short_subsets(self):
-        M = self._matroid()
-        for s in powerset(M.groundset()):
-            if M.is_coindependent(s):
-                yield s
-
-    def long_subsets(self):
-        M = self._matroid()
-        for s in powerset(M.groundset()):
-            if not M.is_coindependent(s):
-                yield s
+    # TODO implement generalized cocircuits for forward exchange matroids, from Lenz
 
     # TODO is this abstract, or specific to central case?
-    def _big_ex(self,s):
+    def _big_ex(self,S):
         M = self._matroid()
-        ex_poss = M.groundset().difference(s)
+        ex_poss = M.groundset().difference(S)
         def f(e):
-            flat = M.closure(filter(lambda i: i <= e, s))
+            flat = M.closure(filter(lambda i: i <= e, S))
             return not e in flat
         ex = filter(f, ex_poss)
         return ex
@@ -82,10 +70,10 @@ class AbstractZonotopalAlgebra:
         return y
 
     def I_ideal(self):
-        return ideal(self.I_ideal_gens())
+        return Ideal(self.I_ideal_gens())
 
     def J_ideal(self):
-        return ideal(self.J_ideal_gens())
+        return Ideal(self.J_ideal_gens())
 
     def I_ideal_gens(self):
         raise NotImplementedError

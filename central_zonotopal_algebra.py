@@ -13,7 +13,8 @@ class CentralZonotopalAlgebra(AbstractZonotopalAlgebra):
         AbstractZonotopalAlgebra.__init__(self, X, varNames)
 
     def __repr__(self):
-        return "Central Zonotopal Algebra over the field " + str(self.F) + " with matrix\n" + str(self.X)
+        return "Central Zonotopal Algebra over " + str(self.base_field()) \
+            + " with matrix\n" + str(self.matrix())
 
     @cached_method
     def I_ideal_gens(self):
