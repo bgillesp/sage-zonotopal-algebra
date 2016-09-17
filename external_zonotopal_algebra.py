@@ -56,6 +56,30 @@ class ExternalZonotopalAlgebra(AbstractZonotopalAlgebra):
             gens.append(gen)
         return gens
 
+    # def alt_I_ideal_gens(self):
+    #     # IDEA: generate I ideal using some appropriate generators coming from
+    #     # lower-dimensional subspaces, not just the hyperplanes
+    #     # Take k normals, forming a flag in the orthogonal space
+    #     # Take a product of powers of the normal linear forms corresponding to
+    #     # vectors outside of the subspaces spanned by successively more of the normals
+    #     # I think the theory works out for this, since you'll get a nonzero bilinear form for the
+    #     # corresponding cocircuit generator of the external J-ideal.
+    #     # - Are these elements also contained in the standard external I-ideal?
+    #     # - Where does the +1 come in in the exponent?
+    #     gens = []
+    #     # normals for arbitrary subspaces
+    #     X = self.matrix()
+    #     M = self._matroid()
+    #     G = M.groundset()
+    #     V = self._vector_space()
+    #     flat_bases = []
+    #     for c in cocircuits(self._external_matroid(), self._external_bases()):
+    #         flat = G.difference(c)
+    #         f_basis = [X.column(v) for v in M.max_independent(flat)]
+    #         f_orth_basis = V.subspace(f_basis).complement().basis()
+    #         flat_bases.append( (flat, f_orth_basis) )
+    #     return flat_bases
+
     @cached_method
     def J_ideal_gens(self):
         gens = []

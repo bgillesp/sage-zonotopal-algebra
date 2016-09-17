@@ -309,9 +309,10 @@ class PolyUtils:
         forms, corresponding to the differential operation ``p(D)q`` evaluated
         at ``x = 0``.
         """
+        deriv_poly = PolyUtils.poly_deriv(p,q)
         n_vars = len(p.parent().gens())
         zero = [0]*n_vars
-        return (PolyUtils.poly_deriv(p,q))(zero)
+        return deriv_poly(zero)
 
     # TODO do we need this method given that we have the Monomials class?
     @staticmethod
