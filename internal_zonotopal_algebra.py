@@ -40,7 +40,7 @@ class InternalZonotopalAlgebra(AbstractZonotopalAlgebra):
             gens.append(gen)
         return gens
 
-    # @cached_method
+    @cached_method
     def J_ideal_gens(self):
         gens = []
         P = self.polynomial_ring()
@@ -74,7 +74,6 @@ class InternalZonotopalAlgebra(AbstractZonotopalAlgebra):
                     projections.append( (b, projected) )
 
             if len(projections) > 0:
-
                 ########### VERBOSE VERSION for debugging
                 # # apply projections to corresponding vectors in copy of X
                 # print "X:\n%s" % X

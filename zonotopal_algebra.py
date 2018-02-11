@@ -1,6 +1,7 @@
 from central_zonotopal_algebra import CentralZonotopalAlgebra
 from internal_zonotopal_algebra import InternalZonotopalAlgebra
 from external_zonotopal_algebra import ExternalZonotopalAlgebra
+from forward_exchange_zonotopal_algebra import ForwardExchangeZonotopalAlgebra
 from sage.repl.rich_output.pretty_print import pretty_print
 
 # TODO could reformulate this as a factory method rather than a shim
@@ -11,6 +12,8 @@ def ZonotopalAlgebra(X,variant="central",data={}):
         return InternalZonotopalAlgebra(X, **data)
     elif variant == "external":
         return ExternalZonotopalAlgebra(X, **data)
+    elif variant == "forward exchange":
+        return ForwardExchangeZonotopalAlgebra(X, **data)
     # TODO include additional types of zonotopal algebras as possible
     else:
         raise ValueError("uncrecognized zonotopal algebra type: %s" % variant)
