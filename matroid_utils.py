@@ -31,9 +31,9 @@ def long_subsets(M, int_subsets=None):
 
     - ``M`` -- matroid object for which to compute long subsets
 
-    - ``int_subsets`` -- a list of bases (default: None) in ``M`` to be used for
-      the computation.  If None, then uses the collection of bases of ``M``, the
-      classical definition for long subsets.
+    - ``int_subsets`` -- a list of bases (default: None) in ``M`` to be used
+      for the computation.  If None, then uses the collection of bases of
+      ``M``, the classical definition for long subsets.
 
     OUTPUT:
 
@@ -42,10 +42,8 @@ def long_subsets(M, int_subsets=None):
 
     EXAMPLES:
 
-    A simple matroid gives the following long sets with respect to the matroid's
-    bases:
-
-    ::
+    A simple matroid gives the following long sets with respect to the
+    matroid's bases:
 
         sage: X = Matrix(QQ, [[1, 0], [0, 1], [1, 1]]).transpose(); X
         [1 0 1]
@@ -71,15 +69,16 @@ def long_subsets(M, int_subsets=None):
         [1, 2]
         [0, 1, 2]
     """
-    if int_subsets == None:
+    if int_subsets is None:
         int_subsets = M.bases()
     int_subsets = list(int_subsets)
     for s in powerset(M.groundset()):
         for b in int_subsets:
-            if len( set(b).intersection(set(s)) ) == 0:
+            if len(set(b).intersection(set(s))) == 0:
                 break
         else:
             yield s
+
 
 def short_subsets(M, int_subsets=None):
     r"""
@@ -92,9 +91,9 @@ def short_subsets(M, int_subsets=None):
 
     - ``M`` -- matroid object for which to compute long subsets
 
-    - ``int_subsets`` -- a list of bases (default: None) in ``M`` to be used for
-      the computation.  If None, then uses the collection of bases of ``M``, the
-      classical definition for long subsets.
+    - ``int_subsets`` -- a list of bases (default: None) in ``M`` to be used
+      for the computation.  If None, then uses the collection of bases of
+      ``M``, the classical definition for long subsets.
 
     OUTPUT:
 
@@ -134,20 +133,22 @@ def short_subsets(M, int_subsets=None):
         [0, 1]
         [2]
     """
-    if int_subsets == None:
+    if int_subsets is None:
         int_subsets = M.bases()
     int_subsets = list(int_subsets)
     for s in powerset(M.groundset()):
         for b in int_subsets:
-            if len( set(b).intersection(set(s)) ) == 0:
+            if len(set(b).intersection(set(s))) == 0:
                 yield s
                 break
 
+
 def cocircuits(M, bases=None):
-    if bases == None:
+    if bases is None:
         bases = M.bases()
     long_sets = long_subsets(M, bases)
     return SetUtils.minimal_sets(long_sets)
+
 
 # TODO check these for correctness
 def matroid_external(M, B, order=None):
@@ -180,12 +181,13 @@ def matroid_external(M, B, order=None):
     N = M.groundset() - B
     A = set()
     order_key = lambda x: x
-    if order != None:
+    if order is not None:
         order_key = lambda x: order.index(x) # order should contain all indices
     for e in N:
         if min(M.circuit(B | set([e])), key=order_key) == e:
             A.add(e)
     return A
+
 
 def matroid_internal(M, B, order=None):
     """
@@ -217,12 +219,13 @@ def matroid_internal(M, B, order=None):
     N = M.groundset() - B
     A = set()
     order_key = lambda x: x
-    if order != None:
+    if order is not None:
         order_key = lambda x: order.index(x) # order should contain all indices
     for e in B:
         if min(M.cocircuit(N | set([e])), key=order_key) == e:
             A.add(e)
     return A
+
 
 def external_order_leq(M, order=None):
     def leq(B1, B2):
@@ -231,7 +234,7 @@ def external_order_leq(M, order=None):
         if not (M.is_basis(B1) and M.is_basis(B2)):
             raise ValueError("Inputs are not both bases")
         # B1 is ext leq B2 if B2 is contained in B1 union its ext active elts
-        return B2.issubset( B1.union( matroid_external(M, B1, order) ) )
+        return B2.issubset(B1.union(matroid_external(M, B1, order)))
     return leq
 
 def external_order_poset(M, order=None):

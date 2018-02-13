@@ -21,7 +21,9 @@ class CentralZonotopalAlgebra(AbstractZonotopalAlgebra):
         gens = []
         P = self.polynomial_ring()
         n = self._matroid().size()
-        for normal,hyperplane in zip( self._facet_hyperplane_normals(), self._facet_hyperplanes() ):
+        normals = self._facet_hyperplane_normals()
+        hyperplanes = self._facet_hyperplanes()
+        for normal, hyperplane in zip(normals, hyperplanes):
             gen = PolyUtils.linear_form(P, normal)**(n - len(hyperplane))
             gens.append(gen)
         return gens
