@@ -84,30 +84,6 @@ class ExternalZonotopalAlgebra(AbstractZonotopalAlgebra):
             gens.append(gen)
         return gens
 
-    # def alt_I_ideal_gens(self):
-    #     # IDEA: generate I ideal using some appropriate generators coming from
-    #     # lower-dimensional subspaces, not just the hyperplanes
-    #     # Take k normals, forming a flag in the orthogonal space
-    #     # Take a product of powers of the normal linear forms corresponding to
-    #     # vectors outside of the subspaces spanned by successively more of the normals
-    #     # I think the theory works out for this, since you'll get a nonzero bilinear form for the
-    #     # corresponding cocircuit generator of the external J-ideal.
-    #     # - Are these elements also contained in the standard external I-ideal?
-    #     # - Where does the +1 come in in the exponent?
-    #     gens = []
-    #     # normals for arbitrary subspaces
-    #     X = self.matrix()
-    #     M = self._matroid()
-    #     G = M.groundset()
-    #     V = self._vector_space()
-    #     flat_bases = []
-    #     for c in cocircuits(self._external_matroid(), self._external_bases()):
-    #         flat = G.difference(c)
-    #         f_basis = [X.column(v) for v in M.max_independent(flat)]
-    #         f_orth_basis = V.subspace(f_basis).complement().basis()
-    #         flat_bases.append( (flat, f_orth_basis) )
-    #     return flat_bases
-
     @cached_method
     def J_ideal_gens(self):
         gens = []
@@ -131,26 +107,27 @@ class ExternalZonotopalAlgebra(AbstractZonotopalAlgebra):
             basis.append(elt)
         return basis
 
-    # TODO implement D_basis
-    # @cached_method
-    # def D_basis(self):
-    #     basis = []
-    #     P = self.polynomial_ring()
-    #     X_cols = self.matrix().columns()
-    #     # compute dual of P(X)
-    #     P_dual_basis = poly_utils.poly_dual_basis(P, self.P_basis())
-    #     # project P(X) basis (acting as a P(X)* basis) into the kernel of J(X)
-    #     # (hyperplane normals and cocircuits are ordered to allow zipping)
-    #     polys = []
-    #     for normal, cocirc in zip(self._facet_hyperplane_normals(), self._cocircuits()):
-    #         i = poly_utils.linear_form(P, normal)**len(cocirc)
-    #         j = poly_utils.pure_tensor(P, X_cols, cocirc)
-    #         polys.append( (i,j) )
-    #     for p in P_dual_basis:
-    #         q = p
-    #         for (i,j) in polys:
-    #             coeff1 = poly_utils.diff_bilinear_form(j,p)
-    #             coeff2 = poly_utils.diff_bilinear_form(j,i)
-    #             q -= coeff1/coeff2 * i
-    #         basis.append(q)
-    #     return basis
+    @cached_method
+    def D_basis(self):
+        basis = []
+        P = self.polynomial_ring()
+        M = self._matroid()
+        X_cols = self.external_matrix().columns()
+        # compute dual of P(X) basis inside of P(X)
+        P_dual_basis = poly_utils.poly_dual_basis(P, self.P_basis())
+        # project dual basis into the kernel of J(X)
+        polys = []
+        for H in M.hyperplanes():
+            normal = self._hyperplane_normal(H)
+            cocirc = self._external_cocircuit(H)
+            i = poly_utils.linear_form(P, normal)**len(cocirc)  # I-ideal gen
+            j = poly_utils.pure_tensor(P, X_cols, cocirc)       # J-ideal gen
+            polys.append((i, j))
+        for p in P_dual_basis:
+            q = p
+            for (i, j) in polys:
+                coeff1 = poly_utils.diff_bilinear_form(j, p)
+                coeff2 = poly_utils.diff_bilinear_form(j, i)
+                q -= (coeff1 / coeff2) * i
+            basis.append(q)
+        return basis
