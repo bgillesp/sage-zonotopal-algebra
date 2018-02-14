@@ -1,7 +1,6 @@
 from abstract_zonotopal_algebra import AbstractZonotopalAlgebra
 
 import poly_utils
-from matroid_utils import cocircuits
 
 from sage.matroids.constructor import Matroid
 from sage.matrix.constructor import Matrix
@@ -24,24 +23,55 @@ class ExternalZonotopalAlgebra(AbstractZonotopalAlgebra):
     def external_matrix(self):
         return self._ext_block_matrix
 
-    def _external_basis(self):
-        return self._ext_basis_matrix
-
     def _external_matroid(self):
         return self._ext_matroid
 
-    def _external_bases(self):
-        M0 = self._external_matroid()
+    def _extending_basis_matrix(self):
+        return self._ext_basis_matrix
+
+    def _extending_basis_elements(self):
+        r"""
+        Return the extending basis elements as matroid groundset elements of
+        the external matroid.
+        """
+        G = self._matroid().groundset()
+        G_ext = self._external_matroid().groundset()
+        return G_ext - G
+
+    def _external_basis(self, I):
+        r"""
+        Return the external basis associated with a given independent set.
+        """
+        M_ext = self._external_matroid()
         rank = self.matrix().nrows()
-        extendors = list(M0.groundset())[-rank:]
-        for x in self._matroid().independent_sets():
-            x = list(x)
-            for y in extendors:
-                if len(x) == rank:
-                    break
-                if M0.is_independent(x + [y]):
-                    x = x + [y]
-            yield x
+        extending_basis = tuple(self._extending_basis_elements())
+        B_ext = tuple(I)
+        # greedily add elements from extending_basis until full rank
+        for b in extending_basis:
+            if len(B_ext) == rank:
+                break
+            B_try = B_ext + (b,)
+            if M_ext.is_independent(B_try):
+                B_ext = B_try
+        return frozenset(B_ext)
+
+    def _external_cocircuit(self, H):
+        r"""
+        Return the external cocircuit associated with a given hyperplane.
+
+        The external cocircuit associated with a given hyperplane is the set
+        obtained by greedily adding a single element of the extending basis
+        not spanned by the hyperplane to the original cocircuit.
+        """
+        M_ext = self._external_matroid()
+        if M_ext.rank(H) != M_ext.rank() - 1:
+            raise ValueError("The given set H is not a hyperplane")
+        H_ext = M_ext.closure(H)
+        extending_basis = self._extending_basis_elements()
+        G = self._matroid().groundset()
+        extendor = frozenset(sorted(extending_basis - H_ext)[:1])
+        H = frozenset(H)
+        return (G - H_ext) | extendor
 
     @cached_method
     def I_ideal_gens(self):
@@ -83,8 +113,9 @@ class ExternalZonotopalAlgebra(AbstractZonotopalAlgebra):
         gens = []
         P = self.polynomial_ring()
         X_cols = self.external_matrix().columns()
-        for c in cocircuits(self._external_matroid(), self._external_bases()):
-            gen = poly_utils.pure_tensor(P, X_cols, c)
+        for H in self._matroid().hyperplanes():
+            cocirc = self._external_cocircuit(H)
+            gen = poly_utils.pure_tensor(P, X_cols, cocirc)
             gens.append(gen)
         return gens
 
