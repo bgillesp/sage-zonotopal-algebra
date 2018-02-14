@@ -1,17 +1,9 @@
-# from polynomial_vector_space import PolynomialModule
-# from polynomial_vector_space import Monomials
-# from sage.misc.cachefunc import cached_method
-# from sage.matroids.constructor import Matroid
-# from sage.modules.free_module import VectorSpace
-# from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
-# from sage.misc.misc_c import prod
-# from sage.functions.other import factorial
-# from sage.matrix.constructor import Matrix
-import poly_utils
-# from set_utils import SetUtils
-import matroid_utils
-from sage.misc.cachefunc import cached_method
 from abstract_zonotopal_algebra import AbstractZonotopalAlgebra
+
+import poly_utils
+import matroid_utils
+
+from sage.misc.cachefunc import cached_method
 
 
 class InternalZonotopalAlgebra(AbstractZonotopalAlgebra):

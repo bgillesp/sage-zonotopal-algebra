@@ -1,10 +1,12 @@
 from central_zonotopal_algebra import CentralZonotopalAlgebra
-from internal_zonotopal_algebra import InternalZonotopalAlgebra
 from external_zonotopal_algebra import ExternalZonotopalAlgebra
+from internal_zonotopal_algebra import InternalZonotopalAlgebra
+
 from forward_exchange_zonotopal_algebra import ForwardExchangeZonotopalAlgebra
+
 from sage.repl.rich_output.pretty_print import pretty_print
 
-# TODO could reformulate this as a factory method rather than a shim
+
 def ZonotopalAlgebra(X,variant="central",data={}):
     if variant == "central":
         return CentralZonotopalAlgebra(X, **data)
