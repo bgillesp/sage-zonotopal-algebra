@@ -39,49 +39,64 @@ def ZonotopalAlgebra(X,variant="central",data={}):
     # def P_basis(self):
     #     return self.obj.P_basis()
 
-def zon_spaces(Z):
-    print "Generating I..."
-    #I = Sequence(Z.I_ideal().gens(),universe=Z.Pi)
-    I = Z.I_ideal_gens()
-    I.sort()
-    print "Generating J..."
-    #J = Sequence(Z.J_ideal().groebner_basis(),universe=Z.Pi)
-    J = Z.J_ideal_gens()
-    J.sort()
-    print "Generating P..."
-    P = Z.P_basis()
-    P.sort()
-    print "Generating D..."
-    D = Z.D_basis()
-    D.sort()
-    return (I,J,P,D)
+
+def zon_spaces(Z, spaces="IJPD"):
+    I, J, P, D = None, None, None, None
+    if "I" in spaces:
+        print "Generating I ideal gens..."
+        I = Z.I_ideal_gens()
+        I.sort()
+        I = [i.factor() for i in I]
+    if "J" in spaces:
+        print "Generating J ideal gens..."
+        J = Z.J_ideal_gens()
+        J.sort()
+        J = [j.factor() for j in J]
+    if "P" in spaces:
+        print "Generating P space basis..."
+        P = Z.P_basis()
+        P.sort()
+        P = [p.factor() for p in P]
+    if "D" in spaces:
+        print "Generating D space basis..."
+        D = Z.D_basis()
+        D.sort()
+        D = [d.factor() for d in D]
+    return (I, J, P, D)
+
 
 def print_zon_info(tup):
-    (I,J,P,D) = tup
-    print "I(X) ="
-    pretty_print(I)
-    print ""
-    print "J(X) ="
-    pretty_print(J)
-    print ""
-    print "P(X) ="
-    pretty_print(P)
-    print ""
-    print "D(X) ="
-    pretty_print(D)
+    I, J, P, D = tup
+    if I is not None:
+        print "I(X) ="
+        pretty_print(I)
+        print
+    if J is not None:
+        print "J(X) ="
+        pretty_print(J)
+        print
+    if P is not None:
+        print "P(X) ="
+        pretty_print(P)
+        print
+    if D is not None:
+        print "D(X) ="
+        pretty_print(D)
+        print
 
-def zon_info(X, variant="central", data={}):
+
+def zon_info(X, variant="central", data={}, spaces="IJPD"):
     data = data.copy()
-    if not varNames in data:
+    if 'varNames' not in data:
         rws = X.nrows()
         varstr = "xyzabc"
         if rws <= len(varstr):
             varstr = varstr[:rws]
         else:
             varstr = varstr[0]
-        data.varNames = varstr
+        data['varNames'] = varstr
     Z = ZonotopalAlgebra(X, variant, data)
-    tup = zon_spaces(Z)
+    tup = zon_spaces(Z, spaces)
     # print out central zonotopal spaces
     print "X = "
     pretty_print(Z.matrix())

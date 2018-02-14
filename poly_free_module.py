@@ -1,6 +1,7 @@
 # TODO remove the following (included for testing purposes outside sage):
 import sys
-sys.path.insert(0, '/home/bgillespie/Desktop/software-dev/poly-utils')
+sys.path.insert(0, '/home/bgillespie/Desktop/software-dev/zonotopal-algebra/'
+                   'sage-zonotopal-algebra/lib')
 
 from sage.combinat.free_module import CombinatorialFreeModule
 from sage.matrix.constructor import Matrix

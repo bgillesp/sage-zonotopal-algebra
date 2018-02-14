@@ -1,4 +1,4 @@
-from poly_utils import PolyUtils
+import poly_utils
 from set_utils import SetUtils
 from matroid_utils import external_order_leq
 from sage.misc.cachefunc import cached_method
@@ -57,7 +57,7 @@ class ForwardExchangeZonotopalAlgebra(AbstractZonotopalAlgebra):
         for normal,cocirc in zip( self._facet_hyperplane_normals(), self._cocircuits() ):
             # degree of linear form is the size of the truncated cocircuit
             deg = self._cocircuit_order(cocirc)
-            gen = PolyUtils.linear_form(P, normal)**deg
+            gen = poly_utils.linear_form(P, normal)**deg
             gens.append(gen)
         return gens
 
@@ -68,6 +68,6 @@ class ForwardExchangeZonotopalAlgebra(AbstractZonotopalAlgebra):
         X_cols = self.matrix().columns()
         for cocirc in self._cocircuits():
             fe_cocirc = self._truncated_cocircuit(cocirc)
-            gen = PolyUtils.pure_tensor(P, X_cols, fe_cocirc)
+            gen = poly_utils.pure_tensor(P, X_cols, fe_cocirc)
             gens.append(gen)
         return gens

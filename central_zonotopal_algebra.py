@@ -1,5 +1,5 @@
 from abstract_zonotopal_algebra import AbstractZonotopalAlgebra
-from poly_utils import PolyUtils
+import poly_utils
 from sage.misc.cachefunc import cached_method
 # from sage.matroids.constructor import Matroid
 # from sage.modules.free_module import VectorSpace
@@ -21,10 +21,9 @@ class CentralZonotopalAlgebra(AbstractZonotopalAlgebra):
         gens = []
         P = self.polynomial_ring()
         n = self._matroid().size()
-        normals = self._facet_hyperplane_normals()
-        hyperplanes = self._facet_hyperplanes()
-        for normal, hyperplane in zip(normals, hyperplanes):
-            gen = PolyUtils.linear_form(P, normal)**(n - len(hyperplane))
+        for H in self._matroid().hyperplanes():
+            normal = self._hyperplane_normal(H)
+            gen = poly_utils.linear_form(P, normal)**(n - len(H))
             gens.append(gen)
         return gens
 
@@ -33,8 +32,8 @@ class CentralZonotopalAlgebra(AbstractZonotopalAlgebra):
         gens = []
         P = self.polynomial_ring()
         X_cols = self.matrix().columns()
-        for cocirc in self._cocircuits():
-            gen = PolyUtils.pure_tensor(P, X_cols, cocirc)
+        for cocirc in self._matroid().cocircuits():
+            gen = poly_utils.pure_tensor(P, X_cols, cocirc)
             gens.append(gen)
         return gens
 
@@ -42,10 +41,11 @@ class CentralZonotopalAlgebra(AbstractZonotopalAlgebra):
     def P_basis(self):
         basis = []
         P = self.polynomial_ring()
+        M = self._ordered_matroid()
         X_cols = self.matrix().columns()
-        for b in self._matroid().bases():
-            xb = self._big_ex(b)
-            elt = PolyUtils.pure_tensor(P, X_cols, xb)
+        for b in M.bases():
+            ext_passive = M.passive_elements(b) - b
+            elt = poly_utils.pure_tensor(P, X_cols, ext_passive)
             basis.append(elt)
         return basis
 
@@ -53,21 +53,23 @@ class CentralZonotopalAlgebra(AbstractZonotopalAlgebra):
     def D_basis(self):
         basis = []
         P = self.polynomial_ring()
+        M = self._matroid()
         X_cols = self.matrix().columns()
-        # compute dual of P(X)
-        P_dual_basis = PolyUtils.poly_dual_basis(P, self.P_basis())
-        # project P(X) basis (acting as a P(X)* basis) into the kernel of J(X)
-        # (hyperplane normals and cocircuits are ordered to allow zipping)
+        # compute dual of P(X) basis inside of P(X)
+        P_dual_basis = poly_utils.poly_dual_basis(P, self.P_basis())
+        # project dual basis into the kernel of J(X)
         polys = []
-        for normal, cocirc in zip(self._facet_hyperplane_normals(), self._cocircuits()):
-            i = PolyUtils.linear_form(P, normal)**len(cocirc)
-            j = PolyUtils.pure_tensor(P, X_cols, cocirc)
-            polys.append( (i,j) )
+        for H in M.hyperplanes():
+            normal = self._hyperplane_normal(H)
+            cocirc = M.groundset() - H
+            i = poly_utils.linear_form(P, normal)**len(cocirc)  # I-ideal gen
+            j = poly_utils.pure_tensor(P, X_cols, cocirc)       # J-ideal gen
+            polys.append((i, j))
         for p in P_dual_basis:
             q = p
-            for (i,j) in polys:
-                coeff1 = PolyUtils.diff_bilinear_form(j,p)
-                coeff2 = PolyUtils.diff_bilinear_form(j,i)
-                q -= coeff1/coeff2 * i
+            for (i, j) in polys:
+                coeff1 = poly_utils.diff_bilinear_form(j, p)
+                coeff2 = poly_utils.diff_bilinear_form(j, i)
+                q -= (coeff1 / coeff2) * i
             basis.append(q)
         return basis

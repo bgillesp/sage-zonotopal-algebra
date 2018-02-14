@@ -1,5 +1,5 @@
 from abstract_zonotopal_algebra import AbstractZonotopalAlgebra
-from poly_utils import PolyUtils
+import poly_utils
 from sage.misc.cachefunc import cached_method
 from sage.matroids.constructor import Matroid
 # from sage.modules.free_module import VectorSpace
@@ -9,9 +9,10 @@ from sage.matroids.constructor import Matroid
 from sage.matrix.constructor import Matrix
 from matroid_utils import cocircuits
 
+
 class ExternalZonotopalAlgebra(AbstractZonotopalAlgebra):
-    def __init__(self,X,varNames="x",externalBasisMatrix=None):
-        if externalBasisMatrix == None:
+    def __init__(self, X, varNames="x", externalBasisMatrix=None):
+        if externalBasisMatrix is None:
             externalBasisMatrix = Matrix.identity(X.nrows())
         AbstractZonotopalAlgebra.__init__(self, X, varNames)
         self._ext_basis_matrix = externalBasisMatrix
@@ -21,8 +22,6 @@ class ExternalZonotopalAlgebra(AbstractZonotopalAlgebra):
     def __repr__(self):
         return "External Zonotopal Algebra over " + str(self.base_field()) \
             + " with matrix\n" + str(self.matrix())
-
-    # TODO is it better to keep track of base matroid, or matroid with extra basis?
 
     def external_matrix(self):
         return self._ext_block_matrix
@@ -51,8 +50,9 @@ class ExternalZonotopalAlgebra(AbstractZonotopalAlgebra):
         gens = []
         P = self.polynomial_ring()
         n = self._matroid().size()
-        for normal,hyperplane in zip( self._facet_hyperplane_normals(), self._facet_hyperplanes() ):
-            gen = PolyUtils.linear_form(P, normal)**(n - len(hyperplane) + 1)
+        for H in self._matroid().hyperplanes():
+            normal = self._hyperplane_normal(H)
+            gen = poly_utils.linear_form(P, normal)**(n - len(H) + 1)
             gens.append(gen)
         return gens
 
@@ -86,7 +86,7 @@ class ExternalZonotopalAlgebra(AbstractZonotopalAlgebra):
         P = self.polynomial_ring()
         X_cols = self.external_matrix().columns()
         for c in cocircuits(self._external_matroid(), self._external_bases()):
-            gen = PolyUtils.pure_tensor(P, X_cols, c)
+            gen = poly_utils.pure_tensor(P, X_cols, c)
             gens.append(gen)
         return gens
 
@@ -94,10 +94,11 @@ class ExternalZonotopalAlgebra(AbstractZonotopalAlgebra):
     def P_basis(self):
         basis = []
         P = self.polynomial_ring()
+        M = self._ordered_matroid()
         X_cols = self.matrix().columns()
-        for indep in self._matroid().independent_sets():
-            x_indep = self._big_ex(indep)
-            elt = PolyUtils.pure_tensor(P, X_cols, x_indep)
+        for indep in M.independent_sets():
+            ext_passive = M.passive_elements(indep) - indep
+            elt = poly_utils.pure_tensor(P, X_cols, ext_passive)
             basis.append(elt)
         return basis
 
@@ -108,19 +109,19 @@ class ExternalZonotopalAlgebra(AbstractZonotopalAlgebra):
     #     P = self.polynomial_ring()
     #     X_cols = self.matrix().columns()
     #     # compute dual of P(X)
-    #     P_dual_basis = PolyUtils.poly_dual_basis(P, self.P_basis())
+    #     P_dual_basis = poly_utils.poly_dual_basis(P, self.P_basis())
     #     # project P(X) basis (acting as a P(X)* basis) into the kernel of J(X)
     #     # (hyperplane normals and cocircuits are ordered to allow zipping)
     #     polys = []
     #     for normal, cocirc in zip(self._facet_hyperplane_normals(), self._cocircuits()):
-    #         i = PolyUtils.linear_form(P, normal)**len(cocirc)
-    #         j = PolyUtils.pure_tensor(P, X_cols, cocirc)
+    #         i = poly_utils.linear_form(P, normal)**len(cocirc)
+    #         j = poly_utils.pure_tensor(P, X_cols, cocirc)
     #         polys.append( (i,j) )
     #     for p in P_dual_basis:
     #         q = p
     #         for (i,j) in polys:
-    #             coeff1 = PolyUtils.diff_bilinear_form(j,p)
-    #             coeff2 = PolyUtils.diff_bilinear_form(j,i)
+    #             coeff1 = poly_utils.diff_bilinear_form(j,p)
+    #             coeff2 = poly_utils.diff_bilinear_form(j,i)
     #             q -= coeff1/coeff2 * i
     #         basis.append(q)
     #     return basis
