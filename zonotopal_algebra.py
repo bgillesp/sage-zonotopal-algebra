@@ -7,7 +7,7 @@ from forward_exchange_zonotopal_algebra import ForwardExchangeZonotopalAlgebra
 from sage.repl.rich_output.pretty_print import pretty_print
 
 
-def ZonotopalAlgebra(X,variant="central",data={}):
+def ZonotopalAlgebra(X, variant="central", data={}):
     if variant == "central":
         return CentralZonotopalAlgebra(X, **data)
     elif variant == "internal":
@@ -19,27 +19,6 @@ def ZonotopalAlgebra(X,variant="central",data={}):
     # TODO include additional types of zonotopal algebras as possible
     else:
         raise ValueError("uncrecognized zonotopal algebra type: %s" % variant)
-
-    # def __repr__(self):
-    #     return self.obj.__repr__()
-    #
-    # def I_ideal_gens(self):
-    #     return self.obj.I_ideal_gens()
-    #
-    # def I_ideal(self):
-    #     return self.obj.I_ideal()
-    #
-    # def J_ideal_gens(self):
-    #     return self.obj.J_ideal_gens()
-    #
-    # def J_ideal(self):
-    #     return self.obj.J_ideal()
-    #
-    # def D_basis(self):
-    #     return self.obj.D_basis()
-    #
-    # def P_basis(self):
-    #     return self.obj.P_basis()
 
 
 def zon_spaces(Z, spaces="IJPD"):
