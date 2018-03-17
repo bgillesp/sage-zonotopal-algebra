@@ -91,7 +91,7 @@ class PolynomialFreeModule(CombinatorialFreeModule, UniqueRepresentation,
         elif Set(basis).cardinality() < Infinity:
             # cast basis to a list because lazy loading doesn't play nice with
             # some of methods for CombinatorialFreeModule, especially gens()
-            self._basis = list(basis)
+            self._basis = tuple(basis)
             self._dimn = len(self._basis)
             # all are monomials:
             if all([self._poly_ring(p).is_monomial() for p in self._basis]):

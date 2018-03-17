@@ -191,7 +191,7 @@ class OrderedMatroid(sage.matroids.matroid.Matroid):
         logging.debug('sorted groundset self._gs = ' + str(self._gs))
 
         # output active set
-        active = frozenset()
+        active = self._ground_matroid.loops()
 
         # independent set ordered from largest to smallest
         indep_elts = sorted(I, key=self._gs_key, reverse=True)
@@ -229,7 +229,7 @@ class OrderedMatroid(sage.matroids.matroid.Matroid):
 
     def _coindep_coactivity(self, cI):
         # output coactive set
-        coactive = frozenset()
+        coactive = self._ground_matroid.coloops()
 
         # independent set ordered from largest to smallest
         coindep_elts = sorted(cI, key=self._gs_key, reverse=True)

@@ -70,7 +70,7 @@ def zon_info(X, variant="central", data={}, spaces="IJPD"):
     data = data.copy()
     if 'varNames' not in data:
         rws = X.nrows()
-        varstr = "xyzabc"
+        varstr = "xyzwabcd"
         if rws <= len(varstr):
             varstr = varstr[:rws]
         else:

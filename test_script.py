@@ -1,21 +1,58 @@
 from sage.all import *
 
-import zonotopal_algebra
-from ordered_matroid import OrderedMatroid
+from zonotopal_algebra import ZonotopalAlgebra
 
 
 def main():
-    cols = [[1, 0], [0, 1], [1, 1]]
-    X = Matrix(QQ, cols).transpose()
-    # M = OrderedMatroid(Matroid(X), reverse=True)
-    # print M
-    # print M.coactive_elements([2])
-    zonotopal_algebra.zon_info(X, "external", spaces="IJPD")
-    # Z = zonotopal_algebra.ZonotopalAlgebra(X, "external")
-    # print "Z = ", Z
-    # print "External Matrix =\n", Z._extending_basis_matrix()
-    # print Z._external_cocircuit([2,3])
-    # print Z._external_basis([1,2])
+    # cols1 = [
+    #     [1, -1, 0, 0],
+    #     [1, 0, -1, 0],
+    #     [0, 1, -1, 0],
+    #     [1, 0, 0, -1],
+    #     [0, 1, 0, -1],
+    #     [0, 0, 1, -1]
+    # ]
+    # X1 = Matrix(QQ, cols1).transpose()
+    #
+    # Z1 = ZonotopalAlgebra(X1, variant="internal")
+    # P1 = Z1.polynomial_ring()
+    # x0, x1, x2, x3 = P1.gens()
+    # print "Z1 =", Z1
+    # p = (x1 - 2*x2 + x3)
+    # print "Polynomial:", p
+    # print "In P-space basis:", Z1.P_space()(p)
+    #
+    # cols2 = [
+    #     [1, 0],
+    #     [1, 1],
+    #     [0, 1],
+    #     [0, 1]
+    # ]
+    # X2 = Matrix(QQ, cols2).transpose()
+    #
+    # Z2 = ZonotopalAlgebra(X2, variant="internal")
+    # print "Z2 =", Z2
+    # print "Internal P space basis:"
+    # print Z2.P_space_basis()
+
+    cols3 = [
+        [0, 0, 1],
+        [0, 1, 0],
+        [1, 0, 1],
+        [1, 0, 0],
+        [1, 1, 0]
+    ]
+    X3 = Matrix(QQ, cols3).transpose()
+
+    Z3 = ZonotopalAlgebra(X3, variant="internal")
+    print "Z3 =", Z3
+    print "Internal bases:"
+    print list(Z3._internal_bases())
+    print "Hyperplanes"
+    print list(Z3._ordered_matroid().hyperplanes())
+    gens = Z3.I_ideal_gens()
+    for g in gens:
+        print factor(g)
 
 
 if __name__ == "__main__":

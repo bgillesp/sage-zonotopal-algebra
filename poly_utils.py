@@ -40,7 +40,7 @@ def poly_deriv(p, q):
         18*x + 6*y + 6
     """
     g = p.parent().gens()
-    s = 0
+    s = p.parent().zero()
     for e_tup, coeff in p.dict().iteritems():
         diff_list = []
         for v, e in zip(g, e_tup):
