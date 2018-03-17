@@ -3,8 +3,10 @@ from sage.combinat.posets.posets import Poset
 from sage.combinat.posets.lattices import LatticePoset
 from sage.combinat.subset import Subsets
 
+import warnings
 import logging
 import sys
+
 logging.basicConfig(stream=sys.stderr, level=logging.WARNING)
 
 
@@ -103,9 +105,9 @@ class OrderedMatroid(sage.matroids.matroid.Matroid):
         EXAMPLES::
 
             sage: OM = OrderedMatroid(matroids.named_matroids.Vamos())
-            sage: sorted( OM._lex_dominant_basis(['c', 'e', 'f', 'g', 'h']) )
+            sage: sorted( OM._dominant_basis(['c', 'e', 'f', 'g', 'h']) )
             ['c', 'f', 'g', 'h']
-            sage: sorted( OM._lex_dominant_basis(['b', 'd', 'e']) )
+            sage: sorted( OM._dominant_basis(['b', 'd', 'e']) )
             ['b', 'd', 'e']
         """
         X_sorted = self._sorted(X, reverse=True)
@@ -137,10 +139,10 @@ class OrderedMatroid(sage.matroids.matroid.Matroid):
         EXAMPLES::
 
             sage: OM = OrderedMatroid(matroids.named_matroids.Vamos())
-            sage: sorted( OM._lex_dominant_cobasis(['c', 'e', 'f', 'g', 'h']) )
-            ...
-            sage: sorted( OM._lex_dominant_basis(['b', 'd', 'e']) )
-            ...
+            sage: sorted( OM._dominant_cobasis(['c', 'e', 'f', 'g', 'h']) )
+            ['c', 'f', 'g', 'h']
+            sage: sorted( OM._dominant_cobasis(['b', 'd', 'e']) )
+            ['b', 'd', 'e']
         """
         X_sorted = self._sorted(X, reverse=True)
 
@@ -269,13 +271,13 @@ class OrderedMatroid(sage.matroids.matroid.Matroid):
             sage: X = Matrix(QQ, [[1, 0], [0, 1], [1, 1], [1, 1]]).transpose()
             sage: M = Matroid(matrix=X)
             sage: OM = OrderedMatroid(M)
-            sage: sorted( OM.activity([0, 3]) )
+            sage: sorted( OM.active_elements([0, 3]) )
             [2]
-            sage: sorted( OM.activity([0, 2, 3]) )
+            sage: sorted( OM.active_elements([0, 2, 3]) )
             [2]
-            sage: sorted( OM.activity([1, 3]) )
+            sage: sorted( OM.active_elements([1, 3]) )
             [0, 2]
-            sage: sorted( OM.activity([0, 1, 2, 3]) )
+            sage: sorted( OM.active_elements([0, 1, 2, 3]) )
             [0, 2]
         """
         B = self._dominant_basis(X)
@@ -316,27 +318,105 @@ class OrderedMatroid(sage.matroids.matroid.Matroid):
         elts = [str(x) for x in elts]
         return ''.join(elts)
 
-    def external_order(self):
+    # TODO Better way to represent Python strings in a DocString?
+    def external_order(self, variant="convex geometry",
+                       representation="independent"):
+        r"""
+        Return the external order associated with this ordered matroid.
+
+        INPUT:
+
+        - ``variant`` -- a string, either ``convex geometry`` or
+          ``antimatroid`` describing the desired ordering convention.  In
+          particular, the first makes the empty set the zero element of the
+          poset, while the second gives the reverse and makes the empty set the
+          one element of the poset.
+
+        - ``representation`` -- a string, one of ``independent``, ``passive``,
+          and ``convex``, describing the underlying objects used for the
+          resulting Poset object.  Specifically:
+
+          - ``independent`` uses the independent set of each element.
+
+          - ``passive`` uses the passive set of each element.
+
+          - ``convex`` uses the convex closure of each element, given
+            by the union of the independent set its externally active elements,
+            or equivalently the complement of the passive set.
+
+        OUTPUT:
+
+        The external order associated with the ordered matroid, represented as
+        specified by the ``variant`` and ``representation`` parameters.
+
+        EXAMPLES::
+
+            sage: OM = OrderedMatroid(matroids.named_matroids.Vamos())
+            sage: ext_order = OM.external_order()
+            sage: len(OM.independent_sets())
+            158
+            sage: ext_order.cardinality()
+            158
+            sage: ext_order.is_lattice()
+            True
+            sage: ext_order.is_graded()
+            True
+            sage: ext_order.rank()
+            8
+        """
         M = self._ground_matroid
-        passives = {I: self.passive_elements(I) - I
-                    for I in M.independent_sets()}
+        E = self.groundset()
 
-        def label(I):
-            # str_I = self._set_to_str(I)
-            str_EP = self._set_to_str(passives[I])
-            return str_EP  # + " (" + str_I + ")"
-        labels = {passives[I]: label(I) for I in passives}
+        if variant == 'convex geometry':
+            def passives_cmp(S, T):
+                return S.issuperset(T)
+        elif variant == 'antimatroid':
+            def passives_cmp(S, T):
+                return S.issubset(T)
+        else:
+            raise ValueError("OrderedMatroid: invalid variant "
+                             "specified for external order")
 
-        def ext_cmp(S, T):
-            return S.issubset(T)
+        if representation == 'independent':
+            def poset_object_gen(I, ext_passives):
+                return I
+        elif representation == 'passive':
+            def poset_object_gen(I, ext_passives):
+                return ext_passives
+        elif representation == 'convex':
+            def poset_object_gen(I, ext_passives):
+                return E - ext_passives
+        else:
+            raise ValueError("OrderedMatroid: invalid representation "
+                             "specified for external order")
 
-        P = Poset(data=(passives.values(), ext_cmp), element_labels=labels)
+        data = {}
+        for I in M.independent_sets():
+            ext_passives = self.passive_elements(I) - I
+            obj = poset_object_gen(I, ext_passives)
+            data[obj] = ext_passives
+
+        def label(obj):
+            return self._set_to_str(obj)
+        labels = {obj: label(obj) for obj in data}
+
+        def poset_cmp(x, y):
+            px = data[x]
+            py = data[y]
+            return passives_cmp(px, py)
+
+        P = Poset(data=(data.keys(), poset_cmp), element_labels=labels)
         return P
 
-    def internal_order(self):
-        return self.dual().external_order()
+    def internal_order(self, variant="convex geometry",
+                       representation="independent"):
+        return self.dual().external_order(variant, representation)
 
     def internal_external_order(self):
+        warnings.warn("Warning: Internal/external order constructor is "
+                      "currently experimental, and may give incorrect "
+                      "or nonsensical results.")
+
         E = frozenset(self._gs)
 
         passives = {}
