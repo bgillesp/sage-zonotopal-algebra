@@ -1,4 +1,5 @@
 from ordered_matroid import OrderedMatroid
+from poly_free_module import PolynomialFreeModule
 
 from sage.matroids.constructor import Matroid
 from sage.modules.free_module import VectorSpace
@@ -53,8 +54,16 @@ class AbstractZonotopalAlgebra:
     def J_ideal_gens(self):
         raise NotImplementedError
 
-    def P_basis(self):
+    def P_space(self):
+        return PolynomialFreeModule(self.polynomial_ring(),
+                                    basis=tuple(self.P_space_basis()))
+
+    def P_space_basis(self):
         raise NotImplementedError
 
-    def D_basis(self):
+    def D_space(self):
+        raise PolynomialFreeModule(self.polynomial_ring(),
+                                   basis=tuple(self.D_space_basis()))
+
+    def D_space_basis(self):
         raise NotImplementedError

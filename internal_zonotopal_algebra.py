@@ -48,7 +48,7 @@ class InternalZonotopalAlgebra(AbstractZonotopalAlgebra):
         return gens
 
     @cached_method
-    def P_basis(self):
+    def P_space_basis(self):
         basis = []
         # for each element of internally passive bases, check if ext active set
         # in cocircuit is empty

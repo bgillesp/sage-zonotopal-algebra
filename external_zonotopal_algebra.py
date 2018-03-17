@@ -96,7 +96,7 @@ class ExternalZonotopalAlgebra(AbstractZonotopalAlgebra):
         return gens
 
     @cached_method
-    def P_basis(self):
+    def P_space_basis(self):
         basis = []
         P = self.polynomial_ring()
         M = self._ordered_matroid()
@@ -108,7 +108,7 @@ class ExternalZonotopalAlgebra(AbstractZonotopalAlgebra):
         return basis
 
     @cached_method
-    def D_basis(self):
+    def D_space_basis(self):
         basis = []
         P = self.polynomial_ring()
         M = self._matroid()
