@@ -39,7 +39,9 @@ class PolynomialFreeModule(CombinatorialFreeModule, UniqueRepresentation,
 
     - ``P`` -- an ambient polynomial ring
     - ``basis`` -- (default: ``None``) a collection of polynomials in P
-      to use as a basis for the resulting module
+      to use as a basis for the resulting module.  This must be a hashable type
+      in order to work properly with the ``UniqueRepresentation`` class, e.g. a
+      ``frozenset`` object or a ``tuple``.
 
     OUTPUT:
 

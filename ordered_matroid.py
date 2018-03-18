@@ -319,30 +319,37 @@ class OrderedMatroid(sage.matroids.matroid.Matroid):
         return ''.join(elts)
 
     # TODO Better way to represent Python strings in a DocString?
-    def external_order(self, variant="convex geometry",
-                       representation="independent"):
+    def external_order(self,
+                       variant="convex geometry",
+                       representation="independent",
+                       string_labels=False):
         r"""
         Return the external order associated with this ordered matroid.
 
         INPUT:
 
-        - ``variant`` -- a string, either ``convex geometry`` or
-          ``antimatroid`` describing the desired ordering convention.  In
-          particular, the first makes the empty set the zero element of the
-          poset, while the second gives the reverse and makes the empty set the
-          one element of the poset.
+        - ``variant`` -- (default: ``convex geometry``) a string, either
+          ``convex geometry`` or ``antimatroid`` describing the desired
+          ordering convention.  In particular, the first makes the empty set
+          the zero element of the poset, while the second gives the reverse and
+          makes the empty set the one element of the poset.
 
-        - ``representation`` -- a string, one of ``independent``, ``passive``,
-          and ``convex``, describing the underlying objects used for the
-          resulting Poset object.  Specifically:
+        - ``representation`` -- (default: ``independent``) a string, one of
+          ``independent``, ``passive``, and ``convex``, describing the
+          underlying objects used for the resulting Poset object.
+          Specifically:
 
           - ``independent`` uses the independent set of each element.
 
           - ``passive`` uses the passive set of each element.
 
-          - ``convex`` uses the convex closure of each element, given
-            by the union of the independent set its externally active elements,
-            or equivalently the complement of the passive set.
+          - ``convex`` uses the convex closure of each element, given by the
+            union of the independent set its externally active elements, or
+            equivalently the complement of the passive set.
+
+        - ``string_labels`` -- (default: ``False``) a Boolean value, if
+          ``True``, give succinct string labels to elements of the poset, and
+          otherwise represent poset elements as ``frozenset`` objects
 
         OUTPUT:
 
@@ -396,9 +403,12 @@ class OrderedMatroid(sage.matroids.matroid.Matroid):
             obj = poset_object_gen(I, ext_passives)
             data[obj] = ext_passives
 
-        def label(obj):
-            return self._set_to_str(obj)
-        labels = {obj: label(obj) for obj in data}
+        if string_labels:
+            def label(obj):
+                return self._set_to_str(obj)
+            labels = {obj: label(obj) for obj in data}
+        else:
+            labels = None
 
         def poset_cmp(x, y):
             px = data[x]
