@@ -35,10 +35,31 @@ class AbstractZonotopalAlgebra:
     def _ordered_matroid(self):
         return self._OM
 
-    def _hyperplane_normal(self, H):
+    def _hyperplane_normal(self, F, E=None):
+        r"""
+        Return a hyperplane normal of a flat F in another flat E of rank one
+        higher.
+
+        INPUT:
+
+        - ``F`` -- a flat of the underlying matroid.
+
+        - ``E`` -- (default: ``None``) a flat of the underlying matroid of rank
+          one higher than ``F``.  If ``None``, then ``E`` is assumed to be the
+          complete ground set.
+
+        OUTPUT:
+
+        A nonzero vector in the span of ``E`` which is orthogonal to the span
+        of ``F``.
+        """
         X, V = self.matrix(), self._vector_space()
-        H_subspace = V.subspace([X.column(h) for h in H])
-        return H_subspace.complement().basis()[0]
+        F_subspace = V.subspace([X.column(x) for x in F])
+        if E is None:
+            return F_subspace.complement().basis()[0]
+        else:
+            E_subspace = V.subspace([X.column(x) for x in E])
+            return F_subspace.complement().intersection(E_subspace).basis()[0]
 
     # TODO implement Lenz's generalized forward exchange cocircuits
 
