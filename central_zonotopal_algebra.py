@@ -1,8 +1,14 @@
 from abstract_zonotopal_algebra import AbstractZonotopalAlgebra
 
 import poly_utils
+from poly_free_module import PolynomialFreeModule
 
 from sage.misc.cachefunc import cached_method
+
+import itertools
+
+# TODO Refactor functions to give dictionaries identifying polynomials with
+#      corresponding matroid subsets, e.g. hyperplanes or bases, indep. sets
 
 
 class CentralZonotopalAlgebra(AbstractZonotopalAlgebra):
@@ -36,37 +42,113 @@ class CentralZonotopalAlgebra(AbstractZonotopalAlgebra):
 
     @cached_method
     def P_space_basis(self):
-        basis = []
+        basis = {}
         P = self.polynomial_ring()
         M = self._ordered_matroid()
         X_cols = self.matrix().columns()
-        for b in M.bases():
-            ext_passive = M.passive_elements(b) - b
+        for B in M.bases():
+            ext_passive = M.passive_elements(B) - B
             elt = poly_utils.pure_tensor(P, X_cols, ext_passive)
-            basis.append(elt)
+            basis[B] = elt
         return basis
 
     @cached_method
     def D_space_basis(self):
-        basis = []
+        basis = {}
         P = self.polynomial_ring()
-        M = self._matroid()
+        M = self._ordered_matroid()
+        ord_groundset = M.groundset_order()
+        # handle ordering convention in OrderedMatroid class
+        ord_groundset.reverse()
+
+        def gs_key(x):
+            return M.size() - M._gs_key(x)
+
+        ext_ord = M.external_order(variant='convex geometry',
+                                   representation='independent')
         X_cols = self.matrix().columns()
-        # compute dual of P(X) basis inside of P(X)
-        P_dual_basis = poly_utils.poly_dual_basis(P, self.P_basis())
-        # project dual basis into the kernel of J(X)
-        polys = []
-        for H in M.hyperplanes():
-            normal = self._hyperplane_normal(H)
-            cocirc = M.groundset() - H
-            i = poly_utils.linear_form(P, normal)**len(cocirc)  # I-ideal gen
-            j = poly_utils.pure_tensor(P, X_cols, cocirc)       # J-ideal gen
-            polys.append((i, j))
-        for p in P_dual_basis:
-            q = p
-            for (i, j) in polys:
-                coeff1 = poly_utils.diff_bilinear_form(j, p)
-                coeff2 = poly_utils.diff_bilinear_form(j, i)
-                q -= (coeff1 / coeff2) * i
-            basis.append(q)
-        return basis
+
+        # TODO Finish proof of the following: A derivative of a D-space basis
+        #      polynomial can be represented in terms of the basis polynomials
+        #      associated with bases less than it in the external order
+
+        # Cache dominant bases of each flat
+        # empty flat
+        dom_bases = {}
+        dom_bases[frozenset([])] = frozenset([])
+        # nonempty flats
+        nonempty_flats = itertools.chain(
+            *[M.flats(i) for i in range(1, M.rank() + 1)])
+        for F in nonempty_flats:
+            dom_bases[F] = M._dominant_basis(F)
+
+        # For each independent set I, construct the D-space basis polynomial by
+        # extending the basis polynomial associated with I - x where x is the
+        # maximal element of I
+
+        # base case: empty set
+        basis[frozenset([])] = P.one()
+
+        # recursively construct for additional elements in ord_groundset
+        for x in ord_groundset:
+            basis_update = {}
+            for I0 in basis:
+                # TODO give a more efficient enumeration of ind. set extensions
+                I = I0 | frozenset([x])
+                if not M.is_independent(I):
+                    continue
+
+                # identify starting D-space polynomial
+                d0 = basis[I0]
+
+                # identify flat for computation and J-generator for differentiation
+                F0 = M.closure(I0)
+                F = M.closure(I)
+                # note for comparisons that the reverse order is used for notation
+                cocirc = frozenset(
+                    filter(lambda c: gs_key(c) <= gs_key(x), F - F0)
+                )
+                J_gen = poly_utils.pure_tensor(P, X_cols, cocirc)
+
+                # compute orthogonal polynomial p_eta
+                orthog_vec = self._hyperplane_normal(F0, F)
+                p_eta = poly_utils.linear_form(P, orthog_vec)
+
+                # extend d0 by power of orthogonal vector
+                d = d0 * p_eta**(J_gen.degree() - 1)
+
+                # compute derivative of d1 by J_gen
+                d_deriv = poly_utils.poly_deriv(J_gen, d)
+
+                # only project if this derivative is nonzero
+                if d_deriv == P.zero():
+                    basis_update[I] = d
+                else:
+                    # construct polynomial vector space for projection
+                    dom_basis = dom_bases[F0]
+                    poly_indices = ext_ord.closed_interval(I0, dom_basis)
+                    poly_indices.remove(I0)
+                    polys = [p_eta**(d.degree() - basis[J].degree()) * basis[J]
+                             for J in poly_indices]
+                    poly_derivs = [poly_utils.poly_deriv(J_gen, p)
+                                   for p in polys]
+                    P_mod = PolynomialFreeModule(P, basis=tuple(poly_derivs))
+
+                    # decompose d derivative in this polynomial vector space
+                    decomposition = P_mod(d_deriv).to_vector()
+                    d_proj = d
+                    for coeff, poly in zip(decomposition, polys):
+                        d_proj -= coeff * poly
+                    basis_update[I] = d_proj
+
+            # update basis with new polynomials including x
+            basis.update(basis_update)
+
+        # normalize polynomials against P-space
+        D_basis = {}
+        P_basis = self.P_space_basis()
+        for B in M.bases():
+            coeff = poly_utils.diff_bilinear_form(P_basis[B], basis[B])
+            D_basis[B] = basis[B] / coeff
+
+        return D_basis
