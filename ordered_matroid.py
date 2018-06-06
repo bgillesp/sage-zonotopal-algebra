@@ -1,16 +1,11 @@
-import sage.matroids.matroid
-from sage.combinat.posets.posets import Poset
+from sage.matroids.matroid import Matroid
 from sage.combinat.posets.lattices import LatticePoset
+from sage.combinat.posets.posets import Poset
 from sage.combinat.subset import Subsets
-
-import warnings
-import logging
-import sys
-
-logging.basicConfig(stream=sys.stderr, level=logging.WARNING)
+from warnings import warn
 
 
-class OrderedMatroid(sage.matroids.matroid.Matroid):
+class OrderedMatroid(Matroid):
     r"""
     Class OrderedMatroid is a class that derives from Matroid.
     It implements functionality induced on a matroid by an ordering of its
@@ -188,9 +183,6 @@ class OrderedMatroid(sage.matroids.matroid.Matroid):
             sage: sorted( OM._indep_activity(['d', 'e', 'f', 'h']) )
             ['a', 'b', 'c']
         """
-        logging.info('called OrderedMatroid._indep_activity for set I = '
-                     + str(I))
-        logging.debug('sorted groundset self._gs = ' + str(self._gs))
 
         # output active set
         active = self._ground_matroid.loops()
@@ -198,34 +190,17 @@ class OrderedMatroid(sage.matroids.matroid.Matroid):
         # independent set ordered from largest to smallest
         indep_elts = sorted(I, key=self._gs_key, reverse=True)
 
-        logging.debug('computing active elements by iterating through flag of'
-                      ' flats')
-
         prev_F = frozenset()
-        logging.debug('entering loop')
         for (i, x) in enumerate(indep_elts):
-            logging.debug('=== starting loop iteration with (i, x) = '
-                          + str((i, x)))
-
             # flat F spanned by elements x and larger
             F = self._ground_matroid.closure(indep_elts[:i + 1])
-            logging.debug('F = ' + str(F))
-            logging.debug('prev_F = ' + str(prev_F))
-
             # restrict to elements which are newly spanned, not in prev_F
             newly_spanned = sorted(F - prev_F, key=self._gs_key)
-            logging.debug('newly_spanned = ' + str(newly_spanned))
-
             # elements smaller than x in this flag component are active wrt I
             new_active = newly_spanned[:newly_spanned.index(x)]
-            logging.debug('new_active = ' + str(new_active))
             active |= frozenset(new_active)
-            logging.debug('active = ' + str(active))
-
             # record most recent flat F for next flag computation
             prev_F = F
-
-            logging.debug('=== ending loop iteration')
 
         return frozenset(active)
 
@@ -423,9 +398,8 @@ class OrderedMatroid(sage.matroids.matroid.Matroid):
         return self.dual().external_order(variant, representation)
 
     def internal_external_order(self):
-        warnings.warn("Warning: Internal/external order constructor is "
-                      "currently experimental, and may give incorrect "
-                      "or nonsensical results.")
+        warn("Warning: Internal/external order constructor is currently "
+             "experimental, and may give incorrect or nonsensical results.")
 
         E = frozenset(self._gs)
 

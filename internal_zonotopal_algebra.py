@@ -1,9 +1,7 @@
 from abstract_zonotopal_algebra import AbstractZonotopalAlgebra
 from central_zonotopal_algebra import CentralZonotopalAlgebra
-
-import poly_utils
-import matroid_utils
-
+from poly_utils import linear_form
+from poly_utils import pure_tensor
 from sage.misc.cachefunc import cached_method
 
 
@@ -34,7 +32,7 @@ class InternalZonotopalAlgebra(AbstractZonotopalAlgebra):
         n = self._matroid().size()
         for H in self._matroid().hyperplanes():
             normal = self._hyperplane_normal(H)
-            gen = poly_utils.linear_form(P, normal)**(n - len(H) - 1)
+            gen = linear_form(P, normal)**(n - len(H) - 1)
             gens.append(gen)
         return gens
 
@@ -51,7 +49,7 @@ class InternalZonotopalAlgebra(AbstractZonotopalAlgebra):
         # initialize generators
         gens = []
         for c in gen_cocircuits:
-            gen = poly_utils.pure_tensor(P, X_cols, c)
+            gen = pure_tensor(P, X_cols, c)
             gens.append(gen)
         return gens
 
@@ -87,10 +85,10 @@ class InternalZonotopalAlgebra(AbstractZonotopalAlgebra):
                 # 3. represent projected matrix in terms of ambient basis again
                 X_projected = basis_matrix * X_basis_change
 
-                elt = poly_utils.pure_tensor(
+                elt = pure_tensor(
                     P, X_projected.columns(), ext_passive)
             else:
-                elt = poly_utils.pure_tensor(P, X_cols, ext_passive)
+                elt = pure_tensor(P, X_cols, ext_passive)
             basis[B] = elt
         return basis
 

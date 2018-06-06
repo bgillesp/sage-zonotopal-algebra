@@ -1,14 +1,11 @@
 from abstract_zonotopal_algebra import AbstractZonotopalAlgebra
-
-import poly_utils
+from itertools import chain
+from poly_utils import diff_bilinear_form
+from poly_utils import linear_form
+from poly_utils import poly_deriv
+from poly_utils import pure_tensor
 from poly_free_module import PolynomialFreeModule
-
 from sage.misc.cachefunc import cached_method
-
-import itertools
-
-# TODO Refactor functions to give dictionaries identifying polynomials with
-#      corresponding matroid subsets, e.g. hyperplanes or bases, indep. sets
 
 
 class CentralZonotopalAlgebra(AbstractZonotopalAlgebra):
@@ -26,7 +23,7 @@ class CentralZonotopalAlgebra(AbstractZonotopalAlgebra):
         n = self._matroid().size()
         for H in self._matroid().hyperplanes():
             normal = self._hyperplane_normal(H)
-            gen = poly_utils.linear_form(P, normal)**(n - len(H))
+            gen = linear_form(P, normal)**(n - len(H))
             gens.append(gen)
         return gens
 
@@ -36,7 +33,7 @@ class CentralZonotopalAlgebra(AbstractZonotopalAlgebra):
         P = self.polynomial_ring()
         X_cols = self.matrix().columns()
         for cocirc in self._matroid().cocircuits():
-            gen = poly_utils.pure_tensor(P, X_cols, cocirc)
+            gen = pure_tensor(P, X_cols, cocirc)
             gens.append(gen)
         return gens
 
@@ -48,7 +45,7 @@ class CentralZonotopalAlgebra(AbstractZonotopalAlgebra):
         X_cols = self.matrix().columns()
         for B in M.bases():
             ext_passive = M.passive_elements(B) - B
-            elt = poly_utils.pure_tensor(P, X_cols, ext_passive)
+            elt = pure_tensor(P, X_cols, ext_passive)
             basis[B] = elt
         return basis
 
@@ -73,7 +70,7 @@ class CentralZonotopalAlgebra(AbstractZonotopalAlgebra):
         dom_bases = {}
         dom_bases[frozenset([])] = frozenset([])
         # nonempty flats
-        nonempty_flats = itertools.chain(
+        nonempty_flats = chain(
             *[M.flats(i) for i in range(1, M.rank() + 1)])
         for F in nonempty_flats:
             dom_bases[F] = M._dominant_basis(F)
@@ -104,17 +101,17 @@ class CentralZonotopalAlgebra(AbstractZonotopalAlgebra):
                 cocirc = frozenset(
                     filter(lambda c: gs_key(c) <= gs_key(x), F - F0)
                 )
-                J_gen = poly_utils.pure_tensor(P, X_cols, cocirc)
+                J_gen = pure_tensor(P, X_cols, cocirc)
 
                 # compute orthogonal polynomial p_eta
                 orthog_vec = self._hyperplane_normal(F0, F)
-                p_eta = poly_utils.linear_form(P, orthog_vec)
+                p_eta = linear_form(P, orthog_vec)
 
                 # extend d0 by power of orthogonal vector
                 d = d0 * p_eta**(J_gen.degree() - 1)
 
                 # compute derivative of d1 by J_gen
-                d_deriv = poly_utils.poly_deriv(J_gen, d)
+                d_deriv = poly_deriv(J_gen, d)
 
                 # only project if this derivative is nonzero
                 if d_deriv == P.zero():
@@ -126,8 +123,7 @@ class CentralZonotopalAlgebra(AbstractZonotopalAlgebra):
                     poly_indices.remove(I0)
                     polys = [p_eta**(d.degree() - basis[J].degree()) * basis[J]
                              for J in poly_indices]
-                    poly_derivs = [poly_utils.poly_deriv(J_gen, p)
-                                   for p in polys]
+                    poly_derivs = [poly_deriv(J_gen, p) for p in polys]
                     P_mod = PolynomialFreeModule(P, basis=tuple(poly_derivs))
 
                     # decompose d derivative in this polynomial vector space
@@ -144,7 +140,7 @@ class CentralZonotopalAlgebra(AbstractZonotopalAlgebra):
         D_basis = {}
         P_basis = self.P_space_basis()
         for B in M.bases():
-            coeff = poly_utils.diff_bilinear_form(P_basis[B], basis[B])
+            coeff = diff_bilinear_form(P_basis[B], basis[B])
             D_basis[B] = basis[B] / coeff
 
         return D_basis

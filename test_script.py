@@ -4,7 +4,7 @@ from zonotopal_algebra import ZonotopalAlgebra
 
 
 def main():
-    check_external_D_space(p401_cols, "xy")
+    check_internal_D_space(p401_cols, "xy")
 
 
 simple_cols = [

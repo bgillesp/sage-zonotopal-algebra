@@ -1,14 +1,8 @@
-# TODO remove the following (included for testing purposes outside sage):
-import sys
-sys.path.insert(0, '/home/bgillespie/Desktop/software-dev/zonotopal-algebra/'
-                   'sage-zonotopal-algebra/lib')
-
+from monomials import Monomials
+from poly_free_module import PolynomialFreeModule
 from sage.functions.other import factorial
 from sage.matrix.constructor import Matrix
 from sage.misc.misc_c import prod
-
-from monomials import Monomials
-from poly_free_module import PolynomialFreeModule
 
 
 def poly_deriv(p, q):

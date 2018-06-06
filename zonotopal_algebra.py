@@ -1,22 +1,16 @@
 from central_zonotopal_algebra import CentralZonotopalAlgebra
 from external_zonotopal_algebra import ExternalZonotopalAlgebra
 from internal_zonotopal_algebra import InternalZonotopalAlgebra
-
-from forward_exchange_zonotopal_algebra import ForwardExchangeZonotopalAlgebra
-
 from sage.repl.rich_output.pretty_print import pretty_print
 
 
 def ZonotopalAlgebra(X, variant="central", data={}):
     if variant == "central":
         return CentralZonotopalAlgebra(X, **data)
-    elif variant == "internal":
-        return InternalZonotopalAlgebra(X, **data)
     elif variant == "external":
         return ExternalZonotopalAlgebra(X, **data)
-    elif variant == "forward exchange":
-        return ForwardExchangeZonotopalAlgebra(X, **data)
-    # TODO include additional types of zonotopal algebras as possible
+    elif variant == "internal":
+        return InternalZonotopalAlgebra(X, **data)
     else:
         raise ValueError("uncrecognized zonotopal algebra type: %s" % variant)
 
