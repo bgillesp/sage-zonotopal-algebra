@@ -1,4 +1,5 @@
 from abstract_zonotopal_algebra import AbstractZonotopalAlgebra
+from central_zonotopal_algebra import CentralZonotopalAlgebra
 
 import poly_utils
 import matroid_utils
@@ -9,6 +10,7 @@ from sage.misc.cachefunc import cached_method
 class InternalZonotopalAlgebra(AbstractZonotopalAlgebra):
     def __init__(self, X, varNames="x"):
         AbstractZonotopalAlgebra.__init__(self, X, varNames)
+        self._central_za = CentralZonotopalAlgebra(X, varNames)
 
     def __repr__(self):
         return ("Internal Zonotopal Algebra over "
@@ -38,18 +40,24 @@ class InternalZonotopalAlgebra(AbstractZonotopalAlgebra):
 
     @cached_method
     def J_ideal_gens(self):
-        gens = []
         P = self.polynomial_ring()
+        M = self._ordered_matroid()
         X_cols = self.matrix().columns()
-        for c in matroid_utils.cocircuits(self._matroid(),
-                                          self._internal_bases()):
+        # compute internal generalized cocircuits
+        L = M.external_order(variant="antimatroid")
+        non_internal = set(L) - set(self._internal_bases())
+        min_non_internal = L.subposet(non_internal).minimal_elements()
+        gen_cocircuits = [M.passive_elements(I) - I for I in min_non_internal]
+        # initialize generators
+        gens = []
+        for c in gen_cocircuits:
             gen = poly_utils.pure_tensor(P, X_cols, c)
             gens.append(gen)
         return gens
 
     @cached_method
     def P_space_basis(self):
-        basis = []
+        basis = {}
         # for each element of internally passive bases, check if ext active set
         # in cocircuit is empty
         # if so, zero out b-component of largest elt in ext passive set
@@ -83,5 +91,11 @@ class InternalZonotopalAlgebra(AbstractZonotopalAlgebra):
                     P, X_projected.columns(), ext_passive)
             else:
                 elt = poly_utils.pure_tensor(P, X_cols, ext_passive)
-            basis.append(elt)
+            basis[B] = elt
+        return basis
+
+    @cached_method
+    def D_space_basis(self):
+        central_basis = self._central_za.D_space_basis()
+        basis = {B: central_basis[B] for B in self._internal_bases()}
         return basis

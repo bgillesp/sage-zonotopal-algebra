@@ -61,8 +61,6 @@ class AbstractZonotopalAlgebra:
             E_subspace = V.subspace([X.column(x) for x in E])
             return F_subspace.complement().intersection(E_subspace).basis()[0]
 
-    # TODO implement Lenz's generalized forward exchange cocircuits
-
     def I_ideal(self):
         return Ideal(self.I_ideal_gens())
 

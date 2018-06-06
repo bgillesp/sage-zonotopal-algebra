@@ -68,10 +68,6 @@ class CentralZonotopalAlgebra(AbstractZonotopalAlgebra):
                                    representation='independent')
         X_cols = self.matrix().columns()
 
-        # TODO Finish proof of the following: A derivative of a D-space basis
-        #      polynomial can be represented in terms of the basis polynomials
-        #      associated with bases less than it in the external order
-
         # Cache dominant bases of each flat
         # empty flat
         dom_bases = {}
