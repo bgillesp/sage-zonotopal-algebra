@@ -4,13 +4,13 @@ from internal_zonotopal_algebra import InternalZonotopalAlgebra
 from sage.repl.rich_output.pretty_print import pretty_print
 
 
-def ZonotopalAlgebra(X, variant="central", data={}):
+def ZonotopalAlgebra(X, variant="central", **kwargs):
     if variant == "central":
-        return CentralZonotopalAlgebra(X, **data)
+        return CentralZonotopalAlgebra(X, **kwargs)
     elif variant == "external":
-        return ExternalZonotopalAlgebra(X, **data)
+        return ExternalZonotopalAlgebra(X, **kwargs)
     elif variant == "internal":
-        return InternalZonotopalAlgebra(X, **data)
+        return InternalZonotopalAlgebra(X, **kwargs)
     else:
         raise ValueError("uncrecognized zonotopal algebra type: %s" % variant)
 
