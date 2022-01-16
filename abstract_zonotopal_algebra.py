@@ -53,12 +53,34 @@ class AbstractZonotopalAlgebra:
         of ``F``.
         """
         X, V = self.matrix(), self._vector_space()
+
         F_subspace = V.subspace([X.column(x) for x in F])
+
         if E is None:
-            return F_subspace.complement().basis()[0]
-        else:
-            E_subspace = V.subspace([X.column(x) for x in E])
-            return F_subspace.complement().intersection(E_subspace).basis()[0]
+            E = self._matroid().groundset()
+            # return F_subspace.complement().basis()[0]
+        E_subspace = V.subspace([X.column(x) for x in E])
+
+        # Workaround needed for bug similar to the one reported at:
+        # https://trac.sagemath.org/ticket/32447
+        # Supposedly should be fixed in Sage 9.5
+        #
+        # Original code:
+        # return F_subspace.complement().intersection(E_subspace).basis()[0]
+
+        external_vec = None
+        for x in E:
+            if X.column(x) not in F_subspace:
+                external_vec = X.column(x)
+                break
+        basis = F_subspace.basis()
+        for b in basis:
+            external_vec -= \
+                (b.inner_product(external_vec) / b.inner_product(b)) * b
+
+        return external_vec
+
+
 
     def I_ideal(self):
         return Ideal(self.I_ideal_gens())
