@@ -16,26 +16,30 @@ def ZonotopalAlgebra(X, variant="central", **kwargs):
         raise ValueError("uncrecognized zonotopal algebra type: %s" % variant)
 
 
-def zon_spaces(Z, spaces="IJPD"):
+def zon_spaces(Z, spaces="IJPD", verbose=False):
     I, J, P, D = None, None, None, None
     if "I" in spaces:
-        print("Generating I ideal gens...")
+        if verbose:
+            print("Generating I ideal gens...")
         I = Z.I_ideal_gens()
         I.sort()
         I = [i.factor() for i in I]
     if "J" in spaces:
-        print("Generating J ideal gens...")
+        if verbose:
+            print("Generating J ideal gens...")
         J = Z.J_ideal_gens()
         J.sort()
         J = [j.factor() for j in J]
     if "P" in spaces:
-        print("Generating P space basis...")
-        P = Z.P_basis()
+        if verbose:
+            print("Generating P space basis...")
+        P = list(Z.P_space_basis().values())
         P.sort()
         P = [p.factor() for p in P]
     if "D" in spaces:
-        print("Generating D space basis...")
-        D = Z.D_basis()
+        if verbose:
+            print("Generating D space basis...")
+        D = list(Z.D_space_basis().values())
         D.sort()
         D = [d.factor() for d in D]
     return (I, J, P, D)
