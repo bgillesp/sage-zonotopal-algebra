@@ -65,7 +65,7 @@ large_matroid_cols = [
 
 def check_central_D_space(cols, varNames):
     X = Matrix(QQ, cols).transpose()
-    Z = ZonotopalAlgebra(X, variant="central", data={'varNames': varNames})
+    Z = ZonotopalAlgebra(X, variant="central", varNames=varNames)
     print("Z =", Z)
     print()
     print("Central P-space basis:")
@@ -147,7 +147,7 @@ def check_internal_D_space(cols, varNames):
 
 def check_external_D_space(cols, varNames):
     X = Matrix(QQ, cols).transpose()
-    Z = ZonotopalAlgebra(X, variant="external", data={'varNames': varNames})
+    Z = ZonotopalAlgebra(X, variant="external", varNames=varNames)
     print("Z =", Z)
     print()
     print("External P-space basis:")
