@@ -35,7 +35,7 @@ def poly_deriv(p, q):
     """
     g = p.parent().gens()
     s = p.parent().zero()
-    for e_tup, coeff in p.dict().iteritems():
+    for e_tup, coeff in p.dict().items():
         diff_list = []
         for v, e in zip(g, e_tup):
             diff_list.extend([v] * e)
