@@ -18,22 +18,22 @@ def ZonotopalAlgebra(X, variant="central", **kwargs):
 def zon_spaces(Z, spaces="IJPD"):
     I, J, P, D = None, None, None, None
     if "I" in spaces:
-        print "Generating I ideal gens..."
+        print("Generating I ideal gens...")
         I = Z.I_ideal_gens()
         I.sort()
         I = [i.factor() for i in I]
     if "J" in spaces:
-        print "Generating J ideal gens..."
+        print("Generating J ideal gens...")
         J = Z.J_ideal_gens()
         J.sort()
         J = [j.factor() for j in J]
     if "P" in spaces:
-        print "Generating P space basis..."
+        print("Generating P space basis...")
         P = Z.P_basis()
         P.sort()
         P = [p.factor() for p in P]
     if "D" in spaces:
-        print "Generating D space basis..."
+        print("Generating D space basis...")
         D = Z.D_basis()
         D.sort()
         D = [d.factor() for d in D]
@@ -43,21 +43,21 @@ def zon_spaces(Z, spaces="IJPD"):
 def print_zon_info(tup):
     I, J, P, D = tup
     if I is not None:
-        print "I(X) ="
+        print("I(X) =")
         pretty_print(I)
-        print
+        print()
     if J is not None:
-        print "J(X) ="
+        print("J(X) =")
         pretty_print(J)
-        print
+        print()
     if P is not None:
-        print "P(X) ="
+        print("P(X) =")
         pretty_print(P)
-        print
+        print()
     if D is not None:
-        print "D(X) ="
+        print("D(X) =")
         pretty_print(D)
-        print
+        print()
 
 
 def zon_info(X, variant="central", data={}, spaces="IJPD"):
@@ -73,8 +73,8 @@ def zon_info(X, variant="central", data={}, spaces="IJPD"):
     Z = ZonotopalAlgebra(X, variant, data)
     tup = zon_spaces(Z, spaces)
     # print out central zonotopal spaces
-    print "X = "
+    print("X = ")
     pretty_print(Z.matrix())
-    print ""
+    print("")
     print_zon_info(tup)
     return tup
