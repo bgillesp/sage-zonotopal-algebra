@@ -1,9 +1,10 @@
-from ordered_matroid import OrderedMatroid
-from poly_free_module import PolynomialFreeModule
 from sage.matroids.constructor import Matroid
 from sage.modules.free_module import VectorSpace
 from sage.rings.ideal import Ideal
 from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
+
+from .ordered_matroid import OrderedMatroid
+from .poly_free_module import PolynomialFreeModule
 
 
 class AbstractZonotopalAlgebra:

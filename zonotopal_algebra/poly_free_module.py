@@ -4,7 +4,8 @@ from sage.rings.infinity import Infinity
 from sage.sets.set import Set
 from sage.structure.parent import Parent
 from sage.structure.unique_representation import UniqueRepresentation
-from monomials import Monomials
+
+from .monomials import Monomials
 
 
 class PolynomialFreeModuleElement(CombinatorialFreeModule.Element):

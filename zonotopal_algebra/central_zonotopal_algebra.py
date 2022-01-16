@@ -1,11 +1,12 @@
-from abstract_zonotopal_algebra import AbstractZonotopalAlgebra
 from itertools import chain
-from poly_utils import diff_bilinear_form
-from poly_utils import linear_form
-from poly_utils import poly_deriv
-from poly_utils import pure_tensor
-from poly_free_module import PolynomialFreeModule
 from sage.misc.cachefunc import cached_method
+
+from .abstract_zonotopal_algebra import AbstractZonotopalAlgebra
+from .poly_utils import diff_bilinear_form
+from .poly_utils import linear_form
+from .poly_utils import poly_deriv
+from .poly_utils import pure_tensor
+from .poly_free_module import PolynomialFreeModule
 
 
 class CentralZonotopalAlgebra(AbstractZonotopalAlgebra):

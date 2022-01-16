@@ -1,7 +1,8 @@
-from central_zonotopal_algebra import CentralZonotopalAlgebra
-from external_zonotopal_algebra import ExternalZonotopalAlgebra
-from internal_zonotopal_algebra import InternalZonotopalAlgebra
 from sage.repl.rich_output.pretty_print import pretty_print
+
+from .central_zonotopal_algebra import CentralZonotopalAlgebra
+from .external_zonotopal_algebra import ExternalZonotopalAlgebra
+from .internal_zonotopal_algebra import InternalZonotopalAlgebra
 
 
 def ZonotopalAlgebra(X, variant="central", **kwargs):

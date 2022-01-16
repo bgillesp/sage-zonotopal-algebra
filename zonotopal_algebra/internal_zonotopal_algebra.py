@@ -1,8 +1,9 @@
-from abstract_zonotopal_algebra import AbstractZonotopalAlgebra
-from central_zonotopal_algebra import CentralZonotopalAlgebra
-from poly_utils import linear_form
-from poly_utils import pure_tensor
 from sage.misc.cachefunc import cached_method
+
+from .abstract_zonotopal_algebra import AbstractZonotopalAlgebra
+from .central_zonotopal_algebra import CentralZonotopalAlgebra
+from .poly_utils import linear_form
+from .poly_utils import pure_tensor
 
 
 class InternalZonotopalAlgebra(AbstractZonotopalAlgebra):

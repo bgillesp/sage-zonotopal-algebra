@@ -1,5 +1,5 @@
 from sage.all import *
-import poly_utils
+import zonotopal_algebra.poly_utils as poly_utils
 from zonotopal_algebra import ZonotopalAlgebra
 
 
